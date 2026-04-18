@@ -68,8 +68,8 @@ eval $BASE_CMD --model InternVL3-14B
 # $BASE_CMD --model InternVL3-38B
 # $BASE_CMD --model InternVL3-78B
 
-# ---------- Claude 3.7 Sonnet (replaces Claude 3.5 Sonnet, API) ----------
-$BASE_CMD --model Claude3-7V_Sonnet
+# ---------- Claude4_Sonnet (replaces Claude 3.5 Sonnet, API) ----------
+$BASE_CMD --model Claude4_Sonnet
 
 # ---------- GPT-4o / GPT-4o-mini (API) ----------
 $BASE_CMD --model GPT4o_20241120
