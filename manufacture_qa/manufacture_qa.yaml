@@ -1,0 +1,4 @@
+group: manufacture_qa
+task:
+  - manufacture_qa_single
+  - manufacture_qa_multi

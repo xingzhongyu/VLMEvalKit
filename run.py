@@ -194,6 +194,7 @@ You can launch the evaluation by setting either --data and --model or --config.
     parser.add_argument('--judge', type=str, default=None)
     # Logging Utils
     parser.add_argument('--verbose', action='store_true')
+    parser.add_argument('--limit', type=int, default=None, help='Only run the first N samples (for debugging)')
     # Configuration for Resume
     # Ignore: will not rerun failed VLM inference
     parser.add_argument('--ignore', action='store_true', help='Ignore failed indices. ')
@@ -312,6 +313,9 @@ def main():
                     if dataset is None:
                         logger.error(f'Dataset {dataset_name} is not valid, will be skipped. ')
                         continue
+
+                if args.limit is not None:
+                    dataset.data = dataset.data.iloc[:args.limit].reset_index(drop=True)
 
                 # Handling Multi-Turn Dataset
                 result_file = osp.join(pred_root, result_file_base)

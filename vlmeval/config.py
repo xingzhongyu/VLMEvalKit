@@ -10,7 +10,7 @@ MiniGPT4_ROOT = None
 TransCore_ROOT = None
 Yi_ROOT = None
 OmniLMM_ROOT = None
-Mini_Gemini_ROOT = None
+Mini_Gemini_ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "MGM")
 VXVERSE_ROOT = None
 VideoChat2_ROOT = None
 VideoChatGPT_ROOT = None
@@ -1394,12 +1394,13 @@ qwen3vl_series = {
         model_path="Qwen/Qwen3-VL-8B-Instruct",
         use_custom_prompt=False,
         use_vllm=True,
-        temperature=0.7, 
+        temperature=0.7,
         max_new_tokens=16384,
         repetition_penalty=1.0,
         presence_penalty=1.5,
         top_p=0.8,
-        top_k=20
+        top_k=20,
+        gpu_utils=0.75,
     ),
     "Qwen3-VL-4B-Instruct": partial(
         vlm.Qwen3VLChat,
@@ -1930,8 +1931,8 @@ qwen2vl_series = {
     "Qwen2.5-VL-3B-Instruct": partial(
         vlm.Qwen2VLChat,
         model_path="Qwen/Qwen2.5-VL-3B-Instruct",
-        min_pixels=1280 * 28 * 28,
-        max_pixels=16384 * 28 * 28,
+        min_pixels=256 * 28 * 28,
+        max_pixels=1280 * 28 * 28,
         use_custom_prompt=False,
     ),
     "Qwen2.5-VL-3B-Instruct-AWQ": partial(
@@ -1944,8 +1945,8 @@ qwen2vl_series = {
     "Qwen2.5-VL-7B-Instruct": partial(
         vlm.Qwen2VLChat,
         model_path="Qwen/Qwen2.5-VL-7B-Instruct",
-        min_pixels=1280 * 28 * 28,
-        max_pixels=16384 * 28 * 28,
+        min_pixels=256 * 28 * 28,
+        max_pixels=1280 * 28 * 28,
         use_custom_prompt=False,
     ),
     "Qwen2.5-VL-7B-Instruct-ForVideo": partial(

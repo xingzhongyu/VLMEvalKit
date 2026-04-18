@@ -1,0 +1,36 @@
+task: manufacture_qa_multi
+dataset_path: json
+dataset_kwargs:
+  data_files: /mnt/nfs/zyxing/lm-evaluation-harness/lm_eval/tasks/manufacture_qa/data/Sample_JuanWang_0322.json
+output_type: multiple_choice
+test_split: train
+process_docs: !function utils.filter_multi_choice
+
+doc_to_text: |
+  Please read the following company profiles and answer the question.
+  {%- for choice in choices %}
+  {{ choice }}
+  {%- endfor %}
+
+  Question: {{ question }}
+  Answer:
+
+# Loglikelihood scoring on each letter label — ranking by score gives the rerank order
+doc_to_choice: !function utils.get_choice_labels
+doc_to_target: !function utils.get_target_index
+
+process_results: !function utils.process_results_multi
+
+metric_list:
+  - metric: ndcg@5         # primary: position-aware ranking quality
+    aggregation: mean
+    higher_is_better: true
+  - metric: ndcg@10
+    aggregation: mean
+    higher_is_better: true
+  - metric: recall@1       # any gold answer in top-1?
+    aggregation: mean
+    higher_is_better: true
+  - metric: recall@5       # coverage: how many gold answers in top-5?
+    aggregation: mean
+    higher_is_better: true

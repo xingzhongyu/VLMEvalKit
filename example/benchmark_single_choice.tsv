@@ -1,0 +1,53 @@
+index	question	image_path	A	B	C	D	E	F	G	H	answer
+0	What material is this product made from?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.5hfab.com/8.jpg	Alloy Steel	Exotic Material	Powdered Metal	Carbon Fiber	Nickel	Alumina	Elastomer	Metal	H
+1	Is this a finished product or raw material?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.5hfab.com/8.jpg	Finished	Raw Material							A
+2	What does this image show?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.5hfab.com/8.jpg	Machine	Product	Facility	Diagram					B
+3	What manufacturing process was used to make this product?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.5hfab.com/8.jpg	Live Tooling Capability	Machining Capability	Fabricating Capability	Drilling Capability	Casting Capability	Nitriding Capability	Black Oxide Coating Capability	CNC Machining Capability	C
+4	What material is this product made from?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.5hfab.com/7.jpg	Metal	Zircon	Exotic Material	Torlon	Carbon Graphite	Carbide	Glass	Zirconium	A
+5	Is this a finished product or raw material?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.5hfab.com/7.jpg	Finished	Raw Material							A
+6	What does this image show?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.5hfab.com/7.jpg	Machine	Product	Facility	Diagram					B
+7	What material is this product made from?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.5hfab.com/5.jpg	Fiber	Metal	Cobalt	Phos Bronze	Chromium	Nylon	Terbium	Extremely Hard Material	B
+8	Is this a finished product or raw material?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.5hfab.com/5.jpg	Finished	Raw Material							A
+9	What does this image show?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.5hfab.com/5.jpg	Machine	Product	Facility	Diagram					B
+10	What material is this product made from?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.5hfab.com/1.jpg	hastelloy	Fiber	Metal	Tantalum	Cast Steel	Titanium	Composite Material	Nickel	C
+11	Is this a finished product or raw material?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.5hfab.com/1.jpg	Finished	Raw Material							A
+12	What does this image show?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.5hfab.com/1.jpg	Machine	Product	Facility	Diagram					B
+13	Is this a finished product or raw material?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.5hfab.com/11.jpg	Finished	Raw Material							A
+14	What does this image show?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.5hfab.com/11.jpg	Machine	Product	Facility	Diagram					B
+15	What material is this product made from?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.5hfab.com/3.jpg	Kovar	Vanadium	Metal	Cast Steel	High Grade Aluminum	Zirconium	Brass	Teflon	C
+16	Is this a finished product or raw material?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.5hfab.com/3.jpg	Finished	Raw Material							A
+17	What does this image show?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.5hfab.com/3.jpg	Machine	Product	Facility	Diagram					B
+18	What material is this product made from?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.5hfab.com/4.jpg	Brass	Nickel	Platinum	Terbium	Molybdenum	Beryllium	Metal	Hafnium	G
+19	Is this a finished product or raw material?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.5hfab.com/4.jpg	Finished	Raw Material							A
+20	What does this image show?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.5hfab.com/4.jpg	Machine	Product	Facility	Diagram					B
+21	Is this a finished product or raw material?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.5hfab.com/2.jpg	Finished	Raw Material							A
+22	What does this image show?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.5hfab.com/2.jpg	Machine	Product	Facility	Diagram					B
+23	Is this a finished product or raw material?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.5hfab.com/9.jpg	Finished	Raw Material							A
+24	What does this image show?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.5hfab.com/9.jpg	Machine	Product	Facility	Diagram					B
+25	Is this a finished product or raw material?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.5hfab.com/12.jpg	Finished	Raw Material							A
+26	What does this image show?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.5hfab.com/12.jpg	Machine	Product	Facility	Diagram					B
+27	What material is this product made from?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.5hfab.com/10.jpg	Tantalum	Gold	Metal	Silver	Graphite	Cerium	Zinc Alloy	Nickel	C
+28	Is this a finished product or raw material?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.5hfab.com/10.jpg	Finished	Raw Material							A
+29	What does this image show?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.5hfab.com/10.jpg	Machine	Product	Facility	Diagram					B
+30	Is this a finished product or raw material?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.5hfab.com/6.jpg	Finished	Raw Material							A
+31	What does this image show?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.5hfab.com/6.jpg	Machine	Product	Facility	Diagram					B
+32	Is this a finished product or raw material?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.3dsystems.com/figure-4_1.jpg	Finished	Raw Material							A
+33	What does this image show?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.3dsystems.com/figure-4_1.jpg	Machine	Product	Facility	Diagram					A
+34	What manufacturing process was used to make this product?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.3dsystems.com/figure-4_1.jpg	Cnc machining	Investment Casting Capability	Boring Capability	Sintering Capability	Live Tooling Capability	Grinding Capability	Additive Manufacturing Capability	Finishing Capability	G
+35	Is this a finished product or raw material?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.3dxindustries.com/Gallery_Part2.jpg	Finished	Raw Material							A
+36	What does this image show?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.3dxindustries.com/Gallery_Part2.jpg	Machine	Product	Facility	Diagram					B
+37	Is this a finished product or raw material?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.3dxindustries.com/Gallery_GearSet1.jpg	Finished	Raw Material							A
+38	What does this image show?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.3dxindustries.com/Gallery_GearSet1.jpg	Machine	Product	Facility	Diagram					B
+39	Is this a finished product or raw material?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.3dxindustries.com/Gallery_Deconstruct1.jpg	Finished	Raw Material							A
+40	What does this image show?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.3dxindustries.com/Gallery_Deconstruct1.jpg	Machine	Product	Facility	Diagram					B
+41	Is this a finished product or raw material?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.3dxindustries.com/Gallery_Gears8.jpg	Finished	Raw Material							A
+42	What does this image show?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.3dxindustries.com/Gallery_Gears8.jpg	Machine	Product	Facility	Diagram					B
+43	Is this a finished product or raw material?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.3dxindustries.com/Gallery_BottleOpener1.jpg	Finished	Raw Material							A
+44	What does this image show?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.3dxindustries.com/Gallery_BottleOpener1.jpg	Machine	Product	Facility	Diagram					B
+45	Is this a finished product or raw material?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.3dxindustries.com/Gallery_Gear3.jpg	Finished	Raw Material							A
+46	What does this image show?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.3dxindustries.com/Gallery_Gear3.jpg	Machine	Product	Facility	Diagram					B
+47	What material is this product made from?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.3dxindustries.com/Gallery_Rotor2.jpg	Stainless Steel	Lexan	Phosphor Bronze	Aluminum	Fiber	Lead	Metal	hastelloy	G
+48	Is this a finished product or raw material?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.3dxindustries.com/Gallery_Rotor2.jpg	Finished	Raw Material							A
+49	What does this image show?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.3dxindustries.com/Gallery_Rotor2.jpg	Machine	Product	Facility	Diagram					B
+50	Is this a finished product or raw material?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.3dxindustries.com/Gallery_Sphere1.jpg	Finished	Raw Material							A
+51	What does this image show?	/mnt/nfs/zyxing/VLMEvalKit/example/filtered_images/www.3dxindustries.com/Gallery_Sphere1.jpg	Machine	Product	Facility	Diagram					B

@@ -54,6 +54,7 @@ from .image_mcq import (CVQA, LEGO, SCAM, AffordanceDataset, CustomMCQDataset, C
                         TDBench, TopViewRS, TreeBench, VisualPuzzles, VisuLogic, VLMBlind,
                         VMCBenchDataset, WeMath, XLRSBench, _3DSRBench)
 from .image_mt import MMDUDataset
+from .manufacture_mcq import ManufactureMCQDataset
 from .image_shortqa import ImageShortQADataset, PathVQA_TEST, PathVQA_VAL
 from .image_vqa import (BMMR, CRPE, LENS, MMNIAH, AyaVisionBench, CoreCognition, CountBenchQA,
                         CustomVQADataset, ImageVQADataset, LLaVABench, LLaVABench_KO, LogicVista,
@@ -318,7 +319,7 @@ TEXT_DATASET = [
 ]
 
 CUSTOM_DATASET = [
-    CustomMCQDataset, CustomVQADataset, CustomTextMCQDataset
+    ManufactureMCQDataset, CustomMCQDataset, CustomVQADataset, CustomTextMCQDataset
 ]
 
 DATASET_COLLECTION = [ConcatDataset, ConcatVideoDataset]
