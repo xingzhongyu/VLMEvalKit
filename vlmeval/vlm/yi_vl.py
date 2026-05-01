@@ -117,12 +117,9 @@ class Yi_VL(BaseModel):
             .cuda()
         )
 
-        image = Image.open(image_path)
+        image = Image.open(image_path).convert('RGB')
         if getattr(self.model.config, 'image_aspect_ratio', None) == 'pad':
-            if image.mode == 'L':
-                background_color = int(sum([int(x * 255) for x in self.image_processor.image_mean]) / 3)
-            else:
-                background_color = tuple(int(x * 255) for x in self.image_processor.image_mean)
+            background_color = tuple(int(x * 255) for x in self.image_processor.image_mean)
             image = expand2square(image, background_color)
         image_tensor = self.image_processor.preprocess(image, return_tensors='pt')[
             'pixel_values'
