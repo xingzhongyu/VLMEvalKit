@@ -254,7 +254,8 @@ class CogVlm(BaseModel):
             model_path,
             torch_dtype=torch.bfloat16,
             trust_remote_code=True,
-        ).to('cuda').eval()
+            device_map='auto',
+        ).eval()
 
         self.kwargs = kwargs
         if tokenizer_name:

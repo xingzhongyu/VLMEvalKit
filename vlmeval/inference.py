@@ -1,6 +1,8 @@
 import argparse
+import json
 import os
 import os.path as osp
+import time
 import warnings
 
 import torch
@@ -154,6 +156,7 @@ def infer_data(model, model_name, work_dir, dataset, out_file, verbose=False, ap
     else:
         model.set_dump_image(dataset.dump_image)
 
+    t0 = time.time()
     for i in tqdm(range(lt), desc=f'Infer {model_name}/{dataset_name}, Rank {rank}/{world_size}'):
         idx = data.iloc[i]['index']
         if idx in res:
@@ -185,6 +188,11 @@ def infer_data(model, model_name, work_dir, dataset, out_file, verbose=False, ap
         res[idx] = response
         if (i + 1) % 10 == 0:
             dump(res, out_file)
+
+    elapsed = time.time() - t0
+    timing = {'n_samples': lt, 'elapsed_sec': elapsed}
+    with open(out_file + '_timing.json', 'w') as f:
+        json.dump(timing, f)
 
     res = {k: res[k] for k in data_indices}
     dump(res, out_file)
@@ -273,6 +281,24 @@ def infer_data_job(
             data.pop('image')
 
         dump(data, result_file)
+
+        # Aggregate per-rank timing → save sidecar next to result_file
+        total_samples, max_elapsed = 0, 0.0
+        for i in range(world_size):
+            tfile = tmpl.format(i) + '_timing.json'
+            if osp.exists(tfile):
+                with open(tfile) as f:
+                    t = json.load(f)
+                total_samples += t.get('n_samples', 0)
+                max_elapsed = max(max_elapsed, t.get('elapsed_sec', 0.0))
+                os.remove(tfile)
+        if max_elapsed > 0:
+            throughput = total_samples / max_elapsed
+            timing_out = result_file + '_timing.json'
+            with open(timing_out, 'w') as f:
+                json.dump({'n_samples': total_samples, 'elapsed_sec': max_elapsed,
+                           'throughput_samples_per_sec': throughput}, f)
+
         for i in range(world_size):
             os.remove(tmpl.format(i))
     if world_size > 1:

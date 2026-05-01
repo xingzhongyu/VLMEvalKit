@@ -52,6 +52,8 @@ class ImageBaseDataset:
         self.skip_noimg = skip_noimg
         if skip_noimg and 'image' in data:
             data = data[~pd.isna(data['image'])]
+        if skip_noimg and 'image' not in data and 'image_path' in data:
+            data = data[~pd.isna(data['image_path'])]
 
         data['index'] = [str(x) for x in data['index']]
 
@@ -160,7 +162,7 @@ class ImageBaseDataset:
             if not all(read_ok_flag):
                 tgt_path_abs = [osp.join(self.img_root, x) for x in tgt_path]
                 read_ok_flag = [read_ok(x) for x in tgt_path_abs]
-                assert read_ok_flag, f"Field `image` is missing and we could not find {tgt_path} both as absolute or relative paths. "  # noqa
+                assert all(read_ok_flag), f"Field `image` is missing and we could not find {tgt_path} both as absolute or relative paths. "  # noqa
                 tgt_path = tgt_path_abs
 
         return tgt_path

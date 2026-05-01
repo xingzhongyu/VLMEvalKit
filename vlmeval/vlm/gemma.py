@@ -90,7 +90,7 @@ class Gemma3(BaseModel):
                 )
             self.llm = LLM(
                 model=model_path,
-                max_num_seqs=4,
+                max_num_seqs=kwargs.get("vllm_max_num_seqs", 8),
                 max_model_len=16384,
                 limit_mm_per_prompt={"image": self.limit_mm_per_prompt},
                 tensor_parallel_size=tp_size,
@@ -182,10 +182,29 @@ class Gemma3(BaseModel):
         return processed_message, images
 
     def generate_inner_transformers(self, message, dataset=None):
-        messages = self.message2pipeline(message)
-        inputs = self.processor.apply_chat_template(
-            messages, add_generation_prompt=True, tokenize=True,
-            return_dict=True, return_tensors="pt",
+        # Build text-only message template and load images with PIL separately.
+        # torchvision.io.decode_image (used by apply_chat_template's fetch_images) rejects
+        # some PNGs with non-standard zlib parameters; PIL is more lenient.
+        system_msgs = []
+        if hasattr(self, 'system_prompt') and self.system_prompt is not None:
+            system_msgs = [dict(role='system', content=[dict(type='text', text=self.system_prompt)])]
+
+        content = []
+        pil_images = []
+        for m in message:
+            if m['type'] == 'text':
+                content.append(dict(type='text', text=m['value']))
+            elif m['type'] == 'image':
+                img = Image.open(m['value']).convert('RGB')
+                pil_images.append(img)
+                content.append(dict(type='image'))
+
+        messages = system_msgs + [dict(role='user', content=content)]
+        text = self.processor.apply_chat_template(messages, add_generation_prompt=True, tokenize=False)
+        inputs = self.processor(
+            text=[text],
+            images=pil_images if pil_images else None,
+            return_tensors='pt',
         ).to(self.device, dtype=torch.bfloat16)
 
         input_len = inputs['input_ids'].shape[-1]

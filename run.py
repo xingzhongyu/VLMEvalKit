@@ -66,6 +66,12 @@ def build_model_from_config(cfg, model_name, use_vllm=False):
     config = cp.deepcopy(cfg[model_name])
     if use_vllm:
         config['use_vllm'] = use_vllm
+    # Allow global generation-param overrides via env vars, e.g.:
+    #   export VLMEVAL_TEMPERATURE=0  VLMEVAL_TOP_P=1  VLMEVAL_TOP_K=1
+    for _param, _cast in [('temperature', float), ('top_p', float), ('top_k', int)]:
+        _val = os.environ.get(f'VLMEVAL_{_param.upper()}')
+        if _val is not None:
+            config[_param] = _cast(_val)
     if 'class' not in config:
         return supported_VLM[model_name](**config)
     cls_name = config.pop('class')

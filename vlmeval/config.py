@@ -8,7 +8,7 @@ import vlmeval.vlm as vlm
 PandaGPT_ROOT = None
 MiniGPT4_ROOT = None
 TransCore_ROOT = None
-Yi_ROOT = None
+Yi_ROOT = "/mnt/nfs/zyxing/Yi"
 OmniLMM_ROOT = None
 Mini_Gemini_ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "MGM")
 VXVERSE_ROOT = None
@@ -1398,9 +1398,11 @@ qwen3vl_series = {
         max_new_tokens=16384,
         repetition_penalty=1.0,
         presence_penalty=1.5,
+        min_pixels=256 * 28 * 28,
+        max_pixels=1280 * 28 * 28,
         top_p=0.8,
         top_k=20,
-        gpu_utils=0.75,
+        gpu_utils=0.3,
     ),
     "Qwen3-VL-4B-Instruct": partial(
         vlm.Qwen3VLChat,
@@ -1721,7 +1723,7 @@ cogvlm_series = {
         vlm.CogVlm, model_path="THUDM/cogvlm2-llama3-chat-19B"
     ),
     "glm-4v-9b": partial(vlm.GLM4v, model_path="THUDM/glm-4v-9b"),
-    "GLM4_1VThinking-9b": partial(vlm.GLMThinking, model_path="THUDM/GLM-4.1V-9B-Thinking"),
+    "GLM4_1VThinking-9b": partial(vlm.GLMThinking, model_path="./GLM-4.1V-9B-Thinking"),
     "GLM4_5V": partial(vlm.GLMThinking, model_path="THUDM/GLM-4.5V"),
     "GLM4_6V": partial(vlm.GLMThinking, model_path="THUDM/GLM-4.6V"),
     "GLM4_6V-api": partial(
@@ -1934,6 +1936,7 @@ qwen2vl_series = {
         min_pixels=256 * 28 * 28,
         max_pixels=1280 * 28 * 28,
         use_custom_prompt=False,
+        gpu_utils=0.35,
     ),
     "Qwen2.5-VL-3B-Instruct-AWQ": partial(
         vlm.Qwen2VLChat,
@@ -1948,6 +1951,7 @@ qwen2vl_series = {
         min_pixels=256 * 28 * 28,
         max_pixels=1280 * 28 * 28,
         use_custom_prompt=False,
+        gpu_utils=0.44,
     ),
     "Qwen2.5-VL-7B-Instruct-ForVideo": partial(
         vlm.Qwen2VLChat,
@@ -2212,7 +2216,7 @@ gemma_series = {
     "paligemma2-28b-mix-448": partial(vlm.PaliGemma, model_path="google/paligemma2-28b-mix-448"),
 
     'Gemma3-4B': partial(vlm.Gemma3, model_path='google/gemma-3-4b-it'),
-    'Gemma3-12B': partial(vlm.Gemma3, model_path='google/gemma-3-12b-it'),
+    'Gemma3-12B': partial(vlm.Gemma3, model_path='google/gemma-3-12b-it', gpu_utils=0.44),
     'Gemma3-27B': partial(vlm.Gemma3, model_path='google/gemma-3-27b-it')
 }
 

@@ -28,7 +28,7 @@ To run evaluation for Yi-VL, use `python run.py --model Yi_VL_6B --data {dataset
 
 def edit_config(repo_id):
     if not osp.exists(repo_id):
-        root = get_cache_path(repo_id)
+        root = get_cache_path(repo_id, repo_type='models')
     else:
         root = repo_id
     assert root is not None and osp.exists(root)

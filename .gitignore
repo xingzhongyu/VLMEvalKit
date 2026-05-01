@@ -220,3 +220,6 @@ result*
 debug
 outputs
 scripts/data
+old_outputs
+flash_attn*
+Q2
