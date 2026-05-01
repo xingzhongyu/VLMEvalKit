@@ -1,7 +1,7 @@
 import json
 import csv
 
-INPUT = '/mnt/nfs/zyxing/VLMEvalKit/Q2/qa_dataset_filtered_1657.jsonl'
+INPUT = '/mnt/nfs/zyxing/VLMEvalKit/Q2/qa_dataset_merged_5000.jsonl'
 OUTPUT = '/mnt/nfs/zyxing/VLMEvalKit/Q2/benchmark_q2.tsv'
 
 LETTERS = list('ABCDEF')

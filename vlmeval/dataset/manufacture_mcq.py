@@ -409,23 +409,35 @@ class ManufactureMCQDataset(ImageBaseDataset):
         return acc
 
 
-class ManufactureMCQDatasetQ2(ImageBaseDataset):
-    """Single-choice MCQ benchmark for Q2 industry-sector classification.
+def _read_throughput(eval_file):
+    """Read throughput_samples_per_sec from the sidecar JSON written by inference.py."""
+    import json as _json
+    timing_file = eval_file + '_timing.json'
+    if osp.exists(timing_file):
+        with open(timing_file) as f:
+            t = _json.load(f)
+        return t.get('throughput_samples_per_sec')
+    return None
 
-    Metrics: ACC (exact match) and macro-F1 across option classes.
-    Optional: add model TFLOPS to summary by populating TFLOPS_MAP = {'ModelName': value}.
+
+class ManufactureMCQDatasetQBase(ImageBaseDataset):
+    """Parameterizable single-choice MCQ benchmark base for Q1-Q5 datasets.
+
+    Subclasses must set DATA_ROOT and DATASET_URL. Common workflow:
+      1. Run evaluate() on each QN dataset independently → saves *_detail.tsv
+      2. Call combine_manufacture_q_results() with the detail files you have so far
 
     TSV columns expected: index, question, image_path, A..F, answer, category, difficulty
     """
 
     TYPE = 'MCQ'
-    DATASET_URL = {'benchmark_q2': ''}
+    DATASET_URL = {}
     DATASET_MD5 = {}
-    DATA_ROOT = '/mnt/nfs/zyxing/VLMEvalKit/Q2'
+    DATA_ROOT = None  # subclasses must set this
     force_use_dataset_prompt = True
 
-
-    def __init__(self, dataset='benchmark_q2', skip_noimg=True):
+    def __init__(self, dataset, skip_noimg=True):
+        assert self.DATA_ROOT is not None, f'{self.__class__.__name__}.DATA_ROOT must be set'
         super().__init__(dataset=dataset, skip_noimg=skip_noimg)
         self.img_root = self.DATA_ROOT
 
@@ -468,24 +480,31 @@ class ManufactureMCQDatasetQ2(ImageBaseDataset):
     @staticmethod
     def _extract_letter(pred_str, valid_letters):
         """Pull a single option letter out of a free-form prediction string."""
-        # Bare single letter
         if pred_str in valid_letters:
             return pred_str
-        # Last non-empty line
         lines = [ln.strip() for ln in pred_str.split('\n') if ln.strip()]
         for line in reversed(lines):
             m = re.search(r'\b([A-Z])\b', line)
             if m and m.group(1) in valid_letters:
                 return m.group(1)
-        # First valid letter anywhere in the full string
         m = re.search(r'\b([A-Z])\b', pred_str)
         if m and m.group(1) in valid_letters:
             return m.group(1)
         return ''
 
-    def evaluate(self, eval_file, **judge_kwargs):
-        from sklearn.metrics import f1_score
+    @staticmethod
+    def _metrics(pred_list, gt_list, hit_list):
+        from sklearn.metrics import f1_score as _f1
+        acc = float(np.mean(hit_list)) if hit_list else 0.0
+        valid = [(p, g) for p, g in zip(pred_list, gt_list) if g != '']
+        if valid:
+            vp, vg = zip(*valid)
+            f1 = float(_f1(list(vg), list(vp), average='macro', zero_division=0))
+        else:
+            f1 = 0.0
+        return acc, f1
 
+    def evaluate(self, eval_file, **judge_kwargs):
         judge_kwargs.pop('nproc', None)
 
         data = load(eval_file)
@@ -518,26 +537,9 @@ class ManufactureMCQDatasetQ2(ImageBaseDataset):
         detail_file = get_intermediate_file_path(eval_file, '_detail')
         dump(data, detail_file)
 
-        def _metrics(pred_list, gt_list, hit_list):
-            acc = float(np.mean(hit_list)) if hit_list else 0.0
-            valid = [(p, g) for p, g in zip(pred_list, gt_list) if g != '']
-            if valid:
-                vp, vg = zip(*valid)
-                f1 = float(f1_score(list(vg), list(vp), average='macro', zero_division=0))
-            else:
-                f1 = 0.0
-            return acc, f1
+        overall_acc, overall_f1 = self._metrics(preds, gts, data['hit'].tolist())
 
-        overall_acc, overall_f1 = _metrics(preds, gts, data['hit'].tolist())
-
-        # Read inference throughput from sidecar written by inference.py
-        import json as _json
-        timing_file = eval_file + '_timing.json'
-        throughput = None
-        if osp.exists(timing_file):
-            with open(timing_file) as f:
-                t = _json.load(f)
-            throughput = t.get('throughput_samples_per_sec')
+        throughput = _read_throughput(eval_file)
 
         rows = []
         row0 = {'split': 'Overall', 'ACC': overall_acc, 'F1_macro': overall_f1}
@@ -550,7 +552,7 @@ class ManufactureMCQDatasetQ2(ImageBaseDataset):
                 continue
             for val in sorted(data[col].dropna().unique()):
                 sub = data[data[col] == val]
-                a, f = _metrics(
+                a, f = self._metrics(
                     sub['pred_letter'].tolist(),
                     sub['gt_letter'].tolist(),
                     sub['hit'].tolist(),
@@ -566,3 +568,124 @@ class ManufactureMCQDatasetQ2(ImageBaseDataset):
 
         logger.info(f'\n{acc_df.to_string(index=False)}')
         return acc_df
+
+
+# --------------------------------------------------------------------------- #
+# Per-batch dataset classes (update DATA_ROOT when each batch arrives)        #
+# --------------------------------------------------------------------------- #
+
+class ManufactureMCQDatasetQ1(ManufactureMCQDatasetQBase):
+    DATASET_URL = {'benchmark_q1': ''}
+    DATA_ROOT = '/mnt/nfs/zyxing/VLMEvalKit/Q1'
+
+    def __init__(self, dataset='benchmark_q1', skip_noimg=True):
+        super().__init__(dataset=dataset, skip_noimg=skip_noimg)
+
+
+class ManufactureMCQDatasetQ2(ManufactureMCQDatasetQBase):
+    DATASET_URL = {'benchmark_q2': ''}
+    DATA_ROOT = '/mnt/nfs/zyxing/VLMEvalKit/Q2'
+
+    def __init__(self, dataset='benchmark_q2', skip_noimg=True):
+        super().__init__(dataset=dataset, skip_noimg=skip_noimg)
+
+
+class ManufactureMCQDatasetQ3(ManufactureMCQDatasetQBase):
+    DATASET_URL = {'benchmark_q3': ''}
+    DATA_ROOT = '/mnt/nfs/zyxing/VLMEvalKit/Q3'
+
+    def __init__(self, dataset='benchmark_q3', skip_noimg=True):
+        super().__init__(dataset=dataset, skip_noimg=skip_noimg)
+
+
+class ManufactureMCQDatasetQ4(ManufactureMCQDatasetQBase):
+    DATASET_URL = {'benchmark_q4': ''}
+    DATA_ROOT = '/mnt/nfs/zyxing/VLMEvalKit/Q4'
+
+    def __init__(self, dataset='benchmark_q4', skip_noimg=True):
+        super().__init__(dataset=dataset, skip_noimg=skip_noimg)
+
+
+class ManufactureMCQDatasetQ5(ManufactureMCQDatasetQBase):
+    DATASET_URL = {'benchmark_q5': ''}
+    DATA_ROOT = '/mnt/nfs/zyxing/VLMEvalKit/Q5'
+
+    def __init__(self, dataset='benchmark_q5', skip_noimg=True):
+        super().__init__(dataset=dataset, skip_noimg=skip_noimg)
+
+
+# --------------------------------------------------------------------------- #
+# Cross-dataset aggregation                                                   #
+# --------------------------------------------------------------------------- #
+
+def combine_manufacture_q_results(detail_files, eval_files=None, output_file=None):
+    """Aggregate metrics across multiple ManufactureMCQDatasetQ* evaluations.
+
+    Call this after running evaluate() on whichever Q-datasets you have so far.
+    Each evaluate() saves a *_detail.tsv; pass those paths here.
+
+    Parameters
+    ----------
+    detail_files : dict[str, str]
+        {label: path_to_detail_tsv}  e.g. {'Q1': '/path/Q1_detail.tsv', 'Q2': '...'}
+    eval_files : dict[str, str], optional
+        {label: original_eval_file} — used to read *_timing.json sidecars for
+        throughput. Keys must match detail_files. Omit if timing is not needed.
+    output_file : str, optional
+        If given, the combined metrics DataFrame is saved here as CSV.
+
+    Returns
+    -------
+    pd.DataFrame with columns: split, ACC, F1_macro, n[, throughput(samples/s)]
+    """
+    frames = []
+    for label, path in detail_files.items():
+        df = load(path)
+        df['_dataset'] = label
+        frames.append(df)
+
+    combined = pd.concat(frames, ignore_index=True)
+
+    if 'pred_letter' not in combined.columns or 'gt_letter' not in combined.columns:
+        raise ValueError(
+            'detail files must contain pred_letter and gt_letter columns '
+            '(produced by ManufactureMCQDatasetQBase.evaluate)'
+        )
+
+    throughputs = {}
+    if eval_files:
+        for label, ef in eval_files.items():
+            t = _read_throughput(ef)
+            if t is not None:
+                throughputs[label] = round(t, 3)
+
+    def _add_row(label, sub, throughput=None):
+        preds = sub['pred_letter'].tolist()
+        gts = sub['gt_letter'].tolist()
+        hits = sub['hit'].tolist()
+        acc, f1 = ManufactureMCQDatasetQBase._metrics(preds, gts, hits)
+        entry = {'split': label, 'ACC': acc, 'F1_macro': f1, 'n': len(sub)}
+        if throughput is not None:
+            entry['throughput(samples/s)'] = throughput
+        rows.append(entry)
+
+    rows = []
+    _add_row('Overall', combined)
+
+    for label in detail_files:
+        _add_row(label, combined[combined['_dataset'] == label],
+                 throughput=throughputs.get(label))
+
+    for col in ['category', 'difficulty']:
+        if col not in combined.columns:
+            continue
+        for val in sorted(combined[col].dropna().unique()):
+            _add_row(str(val), combined[combined[col] == val])
+
+    result = pd.DataFrame(rows)
+
+    if output_file:
+        dump(result, output_file)
+
+    logger.info(f'\n{result.to_string(index=False)}')
+    return result
