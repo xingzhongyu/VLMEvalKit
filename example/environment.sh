@@ -4,10 +4,13 @@ export https_proxy=http://121.250.209.147:7890
 # export HTTP_PROXY=http://121.250.209.147:7890
 # export HTTPS_PROXY=http://121.250.209.147:7890
 export HF_ENDPOINT=https://hf-mirror.com
-CUDA_VISIBLE_DEVICES=1 vllm serve Qwen/Qwen2.5-7B-Instruct  --port 8001
-conda activate vlmeval
+
 export TMPDIR=/mnt/nfs/zyxing/pip_tmp
 source ~/.bashrc
+conda activate vlmevalk
+
+
+CUDA_VISIBLE_DEVICES=1 vllm serve Qwen/Qwen2.5-7B-Instruct  --port 8001
 
 
 
@@ -52,7 +55,7 @@ export CUDA_VISIBLE_DEVICES="$FREE_GPUS"
 BASE_CMD="NO_PROXY=localhost,127.0.0.1 no_proxy=localhost,127.0.0.1 python run.py --data benchmark_all_choice --verbose --judge gpt-4o --limit 20"
 BASE_CMD="NO_PROXY=localhost,127.0.0.1 no_proxy=localhost,127.0.0.1 python run.py --data benchmark_text_mcq --verbose --judge gpt-4o"
 
-BASE_CMD="NO_PROXY=localhost,127.0.0.1 no_proxy=localhost,127.0.0.1 python run.py --data benchmark_q2 --verbose --judge gpt-4o"
+BASE_CMD="NO_PROXY=localhost,127.0.0.1 no_proxy=localhost,127.0.0.1 python run.py --data benchmark_q4 --verbose --judge gpt-4o  --reuse --work-dir /mnt/nfs/zyxing/VLMEvalKit/Q4/outputs"
 # ---------- Qwen3-VL (replaces Qwen2-VL) ----------
 # $BASE_CMD --model Qwen3-VL-2B-Instruct
 # $BASE_CMD --model Qwen3-VL-4B-Instruct

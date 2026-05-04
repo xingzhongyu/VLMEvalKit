@@ -12,7 +12,7 @@ from tqdm import tqdm
 from vlmeval.config import supported_VLM
 from vlmeval.smp import (dump, get_pred_file_format, get_pred_file_path, get_rank_and_world_size,
                          load)
-from vlmeval.utils import track_progress_rich
+from vlmeval.utils import track_progress_rich, measure_flops_once
 
 FAIL_MSG = 'Failed to obtain answer via API.'
 
@@ -157,6 +157,7 @@ def infer_data(model, model_name, work_dir, dataset, out_file, verbose=False, ap
         model.set_dump_image(dataset.dump_image)
 
     t0 = time.time()
+    flops_measured = False
     for i in tqdm(range(lt), desc=f'Infer {model_name}/{dataset_name}, Rank {rank}/{world_size}'):
         idx = data.iloc[i]['index']
         if idx in res:
@@ -178,6 +179,10 @@ def infer_data(model, model_name, work_dir, dataset, out_file, verbose=False, ap
                 torch.cuda.synchronize()
                 warnings.warn(f'{type(err)} {str(err)}')
                 response = f'{FAIL_MSG}: {type(err)} {str(err)}'
+        elif not flops_measured and rank == 0:
+            flops_save_path = osp.join(work_dir, f'{model_name}_{dataset_name}_flops.json')
+            response, _ = measure_flops_once(model.generate, struct, dataset_name, flops_save_path)
+            flops_measured = True
         else:
             response = model.generate(message=struct, dataset=dataset_name)
         torch.cuda.empty_cache()

@@ -1599,6 +1599,7 @@ qwen3_5_series = {
         top_k=20,
         presence_penalty=1.5,
         max_new_tokens=32768,
+        gpu_utils=0.6
     ),
 }
 

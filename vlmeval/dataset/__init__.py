@@ -57,7 +57,8 @@ from .image_mt import MMDUDataset
 from .manufacture_mcq import (ManufactureMCQDataset, ManufactureMCQDatasetQBase,
                                ManufactureMCQDatasetQ1, ManufactureMCQDatasetQ2,
                                ManufactureMCQDatasetQ3, ManufactureMCQDatasetQ4,
-                               ManufactureMCQDatasetQ5, combine_manufacture_q_results)
+                               ManufactureMCQDatasetQ5, combine_manufacture_q_results,
+                               ManufactureMCQDatasetQ2Exp1, ManufactureMCQDatasetQ2Exp2)
 from .image_shortqa import ImageShortQADataset, PathVQA_TEST, PathVQA_VAL
 from .image_vqa import (BMMR, CRPE, LENS, MMNIAH, AyaVisionBench, CoreCognition, CountBenchQA,
                         CustomVQADataset, ImageVQADataset, LLaVABench, LLaVABench_KO, LogicVista,
@@ -325,6 +326,7 @@ CUSTOM_DATASET = [
     ManufactureMCQDataset,
     ManufactureMCQDatasetQ1, ManufactureMCQDatasetQ2, ManufactureMCQDatasetQ3,
     ManufactureMCQDatasetQ4, ManufactureMCQDatasetQ5,
+    ManufactureMCQDatasetQ2Exp1, ManufactureMCQDatasetQ2Exp2,
     CustomMCQDataset, CustomVQADataset, CustomTextMCQDataset
 ]
 

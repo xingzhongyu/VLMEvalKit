@@ -1,8 +1,10 @@
 import json
 import csv
+import os
 
-INPUT = '/mnt/nfs/zyxing/VLMEvalKit/Q2/qa_dataset_merged_5000.jsonl'
+INPUT = '/mnt/nfs/zyxing/VLMEvalKit/Q2/qa_dataset_5000_q2_with_hard_subset.jsonl'
 OUTPUT = '/mnt/nfs/zyxing/VLMEvalKit/Q2/benchmark_q2.tsv'
+IMAGE_DIR = '/mnt/nfs/zyxing/VLMEvalKit/Q2/images'
 
 LETTERS = list('ABCDEF')
 
@@ -14,7 +16,7 @@ for idx, r in enumerate(records):
     row = {
         'index': idx,
         'question': r['question'],
-        'image_path': r['image'],   # relative to Q2 DATA_ROOT
+        'image_path': os.path.join(IMAGE_DIR, os.path.basename(r['image'])),
         'answer': r['gt_letter'],   # single letter, e.g. "B"
         'category': r.get('company', ''),
         'type': r.get('question_id', 'Q2'),

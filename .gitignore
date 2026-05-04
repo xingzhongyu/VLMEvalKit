@@ -222,4 +222,6 @@ outputs
 scripts/data
 old_outputs
 flash_attn*
-Q2
+Q2/*
+!Q2/convert_to_tsv.py
+origin_Q2

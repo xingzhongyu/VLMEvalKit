@@ -9,132 +9,24 @@ import pandas as pd
 
 from vlmeval.smp import (LMUDataRoot, dump, file_size, get_intermediate_file_path, load,
                          get_logger, toliststr)
-from vlmeval.utils import track_progress_rich
 from .image_base import ImageBaseDataset
-from .utils import DEBUG_MESSAGE, build_judge
+from .utils import DEBUG_MESSAGE
 
 logger = get_logger(__name__)
 
-
-# --------------------------------------------------------------------------- #
-# Judge helpers (module-level so they work with ThreadPoolExecutor)           #
-# --------------------------------------------------------------------------- #
-
-def _judge_extract_one(model, item):
-    """Call the judge model to extract selected letters from a prediction.
-
-    Returns a frozenset of uppercase letter strings, or frozenset({'Z'}) on failure.
-    """
-    valid_letters = item['valid_letters']
-    pred = item['prediction']
-    question = item.get('question', '')
-    options_str = item.get('options_str', '')
-
-    prompt = (
-        f'The following is a multiple-select question.\n'
-        f'Question: {question}\nOptions:\n{options_str}\n\n'
-        f'A student responded: "{pred}"\n\n'
-        f'Extract ALL option letters the student selected from {sorted(valid_letters)}. '
-        f'Output only the selected letters separated by semicolons (e.g. "A;C"). '
-        f'If nothing can be determined, output "Z".'
-    )
-
-    retry = 3
-    while retry:
-        try:
-            ans = model.generate(prompt)
-            extracted = set(re.findall(r'[A-Z]', ans.upper())) & valid_letters
-            if extracted:
-                return frozenset(extracted), ans
-        except Exception as e:
-            logger.warning(f'Judge call failed: {e}')
-        retry -= 1
-
-    return frozenset({'Z'}), 'Failed after retries'
-
-
-def _process_one(model, item):
-    """Extract selected option letters from a prediction string.
-
-    Tries last-line extraction first (supports reasoning + final-answer format),
-    then falls back to full-string regex, then to LLM judge.
-    """
-    valid_letters = item['valid_letters']
-    pred = item['prediction']
-
-    # Last non-empty line first (model outputs reasoning then answer on final line)
-    lines = [l.strip() for l in pred.strip().split('\n') if l.strip()]
-    if lines:
-        last = lines[-1].upper()
-        if re.fullmatch(r'[A-Z](\s*[;,]\s*[A-Z])*', last):
-            letters = frozenset(re.findall(r'[A-Z]', last)) & valid_letters
-            if letters:
-                return dict(pred_set=letters, log=f'last_line: {last}')
-
-    # Full prediction matches clean letter pattern
-    pred_stripped = pred.strip().upper()
-    fast_match = re.fullmatch(r'[A-Z](\s*[;,]\s*[A-Z])*', pred_stripped)
-    if fast_match:
-        letters = frozenset(re.findall(r'[A-Z]', pred_stripped)) & valid_letters
-        if letters:
-            return dict(pred_set=letters, log=f'fast: {pred_stripped}')
-
-    # Single letter
-    if re.fullmatch(r'[A-Z]', pred_stripped) and pred_stripped in valid_letters:
-        return dict(pred_set=frozenset({pred_stripped}), log=f'fast_single: {pred_stripped}')
-
-    # No judge: collect all valid uppercase letters found as whole words
-    if model is None:
-        letters = frozenset(
-            c for c in re.findall(r'\b[A-Z]\b', pred_stripped)
-            if c in valid_letters
-        )
-        return dict(pred_set=letters or frozenset(), log=f'no_judge: {pred_stripped[:80]}')
-
-    pred_set, raw = _judge_extract_one(model, item)
-    return dict(pred_set=pred_set, log=f'judge: {raw!r:.80}')
-
-
-def _judge_reasoning_one(model, item):
-    """Judge whether the model's reasoning correctly explains the correct answer.
-
-    Returns 1 (correct) or 0 (incorrect/undetermined).
-    """
-    prompt = (
-        'You are evaluating a model\'s reasoning for a manufacturing image question.\n\n'
-        f'Question: {item["question"]}\n'
-        f'Options:\n{item["options_str"]}\n'
-        f'Ground truth answer: {item["gt_letters"]} ({item["gt_text"]})\n'
-        f'Ground truth reasoning: {item["gt_reasoning"]}\n\n'
-        f'Model response: {item["prediction"]}\n\n'
-        'Does the model\'s reasoning correctly explain why the correct option(s) were selected? '
-        'Output only "Yes" or "No".'
-    )
-
-    retry = 3
-    while retry:
-        try:
-            ans = model.generate(prompt)
-            ans_lower = ans.strip().lower()
-            if ans_lower.startswith('yes'):
-                return 1
-            elif ans_lower.startswith('no'):
-                return 0
-        except Exception as e:
-            logger.warning(f'Reasoning judge call failed: {e}')
-        retry -= 1
-
-    return 0
-
-
-def _judge_reasoning_wrapper(model, item):
-    """Wrapper for track_progress_rich compatibility."""
-    correct = _judge_reasoning_one(model, item)
-    return dict(correct=correct)
+def _read_throughput(eval_file):
+    """Read throughput_samples_per_sec from the sidecar JSON written by inference.py."""
+    import json as _json
+    timing_file = eval_file + '_timing.json'
+    if osp.exists(timing_file):
+        with open(timing_file) as f:
+            t = _json.load(f)
+        return t.get('throughput_samples_per_sec')
+    return None
 
 
 # --------------------------------------------------------------------------- #
-# Dataset class                                                               #
+# Dataset class (Legacy / Overall)                                            #
 # --------------------------------------------------------------------------- #
 
 class ManufactureMCQDataset(ImageBaseDataset):
@@ -147,12 +39,6 @@ class ManufactureMCQDataset(ImageBaseDataset):
 
     ``answer`` stores ground-truth as semicolon-separated option letters,
     e.g. ``"A;C"`` for multi-select or ``"B"`` for single-select.
-
-    Metrics
-    -------
-    Option Accuracy (F1)  : token-level F1 between predicted and GT option sets.
-    Strict Accuracy       : LLM judge evaluates whether the model's reasoning
-                            correctly explains the correct answer (requires judge).
     """
 
     TYPE = 'MCQ'
@@ -163,7 +49,6 @@ class ManufactureMCQDataset(ImageBaseDataset):
 
     def __init__(self, dataset='benchmark_all_choice', skip_noimg=True):
         super().__init__(dataset=dataset, skip_noimg=skip_noimg)
-        # Override img_root so relative image_path values resolve under DATA_ROOT
         self.img_root = self.DATA_ROOT
 
     def load_data(self, dataset):
@@ -195,8 +80,8 @@ class ManufactureMCQDataset(ImageBaseDataset):
             f'{options_prompt}\n'
             'This question may have one or more correct answers. '
             'First explain your reasoning step by step. '
-            'Then on the last line output only the selected option letters '
-            'separated by semicolons (e.g. A or A;C;D).'
+            'Then, provide your final answer by enclosing the selected option letters '
+            'separated by semicolons in <answer> tags (e.g., <answer>A;C;D</answer>).'
         )
 
         msgs = []
@@ -207,29 +92,7 @@ class ManufactureMCQDataset(ImageBaseDataset):
         msgs.append(dict(type='text', value=prompt))
         return msgs
 
-    # ----------------------------------------------------------------------- #
-    # Evaluate                                                                 #
-    # ----------------------------------------------------------------------- #
-
-    def evaluate(self, eval_file, **judge_kwargs):
-        nproc = judge_kwargs.pop('nproc', 4)
-        model_name = judge_kwargs.get('model', 'exact_matching')
-
-        if model_name == 'exact_matching':
-            judge_model = None
-            name_str = 'exact'
-        else:
-            judge_model = build_judge(**judge_kwargs)
-            if not judge_model.working():
-                logger.warning('Judge API not working, will use fast extraction only.')
-                judge_model = None
-                name_str = 'exact'
-            else:
-                name_str = model_name
-
-        result_file = get_intermediate_file_path(eval_file, f'_{name_str}_multiselect', 'pkl')
-        reasoning_file = get_intermediate_file_path(eval_file, f'_{name_str}_reasoning', 'pkl')
-
+    def evaluate(self, eval_file, **kwargs):
         data = load(eval_file)
         data = data.sort_values(by='index')
         data['prediction'] = [str(x) for x in data['prediction']]
@@ -237,109 +100,28 @@ class ManufactureMCQDataset(ImageBaseDataset):
         meta = self.data
         meta_idx = {str(row['index']): row for _, row in meta.iterrows()}
 
-        # ------------------------------------------------------------------- #
-        # Phase 1: Extract predicted option letters                           #
-        # ------------------------------------------------------------------- #
-        cached = load(result_file) if osp.exists(result_file) else {}
-
-        tasks, keys = [], []
-        for i in range(len(data)):
-            row = data.iloc[i]
-            idx = str(row['index'])
-            if idx in cached:
-                continue
-
-            valid_letters = frozenset(
-                c for c in string.ascii_uppercase
-                if c in row and not pd.isna(row[c])
-            )
-            meta_row = meta_idx.get(idx, row)
-            options_str = '\n'.join(
-                f'{c}. {meta_row[c]}'
-                for c in sorted(valid_letters)
-                if c in meta_row and not pd.isna(meta_row[c])
-            )
-            tasks.append(dict(
-                model=judge_model,
-                item=dict(
-                    prediction=row['prediction'],
-                    valid_letters=valid_letters,
-                    question=str(meta_row.get('question', '')),
-                    options_str=options_str,
-                ),
-            ))
-            keys.append(idx)
-
-        if tasks:
-            track_progress_rich(_process_one, tasks, nproc=nproc, save=result_file, keys=keys)
-            cached = load(result_file)
-
-        # ------------------------------------------------------------------- #
-        # Phase 2: Reasoning judge (Strict Accuracy) — requires judge model   #
-        # ------------------------------------------------------------------- #
-        reasoning_cached = load(reasoning_file) if osp.exists(reasoning_file) else {}
-
-        if judge_model is not None:
-            r_tasks, r_keys = [], []
-            for i in range(len(data)):
-                row = data.iloc[i]
-                idx = str(row['index'])
-                if idx in reasoning_cached:
-                    continue
-
-                valid_letters = frozenset(
-                    c for c in string.ascii_uppercase
-                    if c in row and not pd.isna(row[c])
-                )
-                meta_row = meta_idx.get(idx, row)
-                options_str = '\n'.join(
-                    f'{c}. {meta_row[c]}'
-                    for c in sorted(valid_letters)
-                    if c in meta_row and not pd.isna(meta_row[c])
-                )
-                ans_raw = meta_row.get('answer', '')
-                gt_letters = '' if pd.isna(ans_raw) or str(ans_raw).strip() in ('None', 'nan') else str(ans_raw)
-                gt_text = '; '.join(
-                    str(meta_row.get(l, '')) for l in gt_letters.split(';') if l.strip()
-                )
-                r_tasks.append(dict(
-                    model=judge_model,
-                    item=dict(
-                        prediction=row['prediction'],
-                        question=str(meta_row.get('question', '')),
-                        options_str=options_str,
-                        gt_letters=gt_letters,
-                        gt_text=gt_text,
-                        gt_reasoning=str(meta_row.get('justification', '')),
-                    ),
-                ))
-                r_keys.append(idx)
-
-            if r_tasks:
-                track_progress_rich(
-                    _judge_reasoning_wrapper, r_tasks,
-                    nproc=nproc, save=reasoning_file, keys=r_keys
-                )
-                reasoning_cached = load(reasoning_file)
-
-        # ------------------------------------------------------------------- #
-        # Compute per-row metrics                                              #
-        # ------------------------------------------------------------------- #
-        hits, f1s, strict_accs = [], [], []
+        hits, f1s = [], []
         logs, pred_strs, gt_strs = [], [], []
 
         for i in range(len(data)):
             row = data.iloc[i]
             idx = str(row['index'])
-            ans_raw = row['answer']
+            meta_row = meta_idx.get(idx, row)
+
+            valid_letters = frozenset(
+                c for c in string.ascii_uppercase
+                if c in meta_row and not pd.isna(meta_row[c])
+            )
+            
+            # Extract prediction using the stricter multi-letter method
+            pred_set = ManufactureMCQDatasetQMultiBase._extract_multi_letters(row['prediction'], valid_letters)
+            
+            # Extract GT
+            ans_raw = meta_row.get('answer', '')
             if pd.isna(ans_raw) or str(ans_raw).strip() in ('', 'None', 'nan'):
                 gt_set = frozenset()
             else:
-                gt_set = frozenset(x.strip() for x in str(ans_raw).split(';') if x.strip())
-
-            res = cached.get(idx, {})
-            pred_set = res.get('pred_set', frozenset())
-            log = res.get('log', 'missing')
+                gt_set = frozenset(x.strip().upper() for x in str(ans_raw).split(';') if x.strip())
 
             hit = 1 if pred_set == gt_set else 0
 
@@ -354,40 +136,25 @@ class ManufactureMCQDataset(ImageBaseDataset):
             else:
                 f1 = 0.0
 
-            r_res = reasoning_cached.get(idx, {})
-            if hit:
-                strict = r_res.get('correct', np.nan)
-            else:
-                strict = 0
-
             hits.append(hit)
             f1s.append(f1)
-            strict_accs.append(strict)
-            logs.append(log)
+            logs.append('Extracted via regex/tags')
             pred_strs.append(';'.join(sorted(pred_set)))
             gt_strs.append(';'.join(sorted(gt_set)))
 
         data['hit'] = hits
         data['option_f1'] = f1s
-        data['strict_acc'] = strict_accs
         data['log'] = logs
         data['pred_letters'] = pred_strs
         data['gt_letters'] = gt_strs
 
-        detail_file = get_intermediate_file_path(eval_file, f'_{name_str}_detail')
+        detail_file = get_intermediate_file_path(eval_file, '_detail')
         dump(data, detail_file)
 
-        # ------------------------------------------------------------------- #
-        # Summary report                                                       #
-        # ------------------------------------------------------------------- #
         res = defaultdict(list)
-        res['split'] = ['none']
-        res['Overall_OptionAccuracy_F1'] = [np.mean(f1s)]
-        res['Overall_ExactMatch'] = [np.mean(hits)]
-
-        valid_strict = [x for x in strict_accs if not (isinstance(x, float) and np.isnan(x))]
-        if valid_strict:
-            res['Overall_StrictAccuracy'] = [np.mean(valid_strict)]
+        res['split'] = ['Overall']
+        res['OptionAccuracy_F1'] = [np.mean(f1s)]
+        res['ExactMatch'] = [np.mean(hits)]
 
         for col in ['category', 'difficulty']:
             if col not in data.columns:
@@ -396,10 +163,7 @@ class ManufactureMCQDataset(ImageBaseDataset):
                 sub = data[data[col] == val]
                 safe = str(val).replace(' ', '_')
                 res[f'{safe}_F1'] = [np.mean(sub['option_f1'])]
-                sub_strict = [x for x in sub['strict_acc']
-                              if not (isinstance(x, float) and np.isnan(x))]
-                if sub_strict:
-                    res[f'{safe}_StrictAccuracy'] = [np.mean(sub_strict)]
+                res[f'{safe}_ExactMatch'] = [np.mean(sub['hit'])]
 
         acc = pd.DataFrame(res)
         score_file = get_intermediate_file_path(eval_file, '_acc', 'csv')
@@ -409,26 +173,12 @@ class ManufactureMCQDataset(ImageBaseDataset):
         return acc
 
 
-def _read_throughput(eval_file):
-    """Read throughput_samples_per_sec from the sidecar JSON written by inference.py."""
-    import json as _json
-    timing_file = eval_file + '_timing.json'
-    if osp.exists(timing_file):
-        with open(timing_file) as f:
-            t = _json.load(f)
-        return t.get('throughput_samples_per_sec')
-    return None
-
+# --------------------------------------------------------------------------- #
+# Q-Series Base Classes                                                       #
+# --------------------------------------------------------------------------- #
 
 class ManufactureMCQDatasetQBase(ImageBaseDataset):
-    """Parameterizable single-choice MCQ benchmark base for Q1-Q5 datasets.
-
-    Subclasses must set DATA_ROOT and DATASET_URL. Common workflow:
-      1. Run evaluate() on each QN dataset independently → saves *_detail.tsv
-      2. Call combine_manufacture_q_results() with the detail files you have so far
-
-    TSV columns expected: index, question, image_path, A..F, answer, category, difficulty
-    """
+    """Parameterizable single-choice MCQ benchmark base for Q1-Q5 datasets."""
 
     TYPE = 'MCQ'
     DATASET_URL = {}
@@ -463,12 +213,12 @@ class ManufactureMCQDatasetQBase(ImageBaseDataset):
             if c in line and not pd.isna(line[c])
         }
         options_prompt = '\n'.join(f'{k}. {v}' for k, v in options.items())
+        
         prompt = (
             f'{question}\n'
             f'{options_prompt}\n'
-            'Output the single letter of the correct option only (e.g. A).'
+            'Please directly provide your final answer by enclosing the single letter of the correct option in <answer> tags (e.g., <answer>A</answer>).'
         )
-
         msgs = []
         if isinstance(tgt_path, list):
             msgs.extend([dict(type='image', value=p) for p in tgt_path])
@@ -479,17 +229,49 @@ class ManufactureMCQDatasetQBase(ImageBaseDataset):
 
     @staticmethod
     def _extract_letter(pred_str, valid_letters):
-        """Pull a single option letter out of a free-form prediction string."""
+        """Pull a single option letter out of a free-form prediction string with strict fallback."""
+        pred_str = pred_str.strip()
+        
+        # 1. Exact match
         if pred_str in valid_letters:
             return pred_str
+            
+        # 2. Try <answer> tags
+        m_tag = re.search(r'<answer>\s*([A-Z])\s*</answer>', pred_str, re.IGNORECASE)
+        if m_tag:
+            ans = m_tag.group(1).upper()
+            if ans in valid_letters:
+                return ans
+
+        # 3. Strict Fallback Strategy
         lines = [ln.strip() for ln in pred_str.split('\n') if ln.strip()]
-        for line in reversed(lines):
-            m = re.search(r'\b([A-Z])\b', line)
-            if m and m.group(1) in valid_letters:
-                return m.group(1)
-        m = re.search(r'\b([A-Z])\b', pred_str)
-        if m and m.group(1) in valid_letters:
-            return m.group(1)
+        if not lines:
+            return ''
+            
+        last_line = lines[-1].upper()
+        
+        # 3a. Look for explicit prefix (e.g., "Answer: A", "Option B")
+        m_prefix = re.search(r'(?:ANSWER|CORRECT|OPTION)S?[\s:=]+([A-Z])\b', last_line)
+        if m_prefix:
+            ans = m_prefix.group(1)
+            if ans in valid_letters:
+                return ans
+                
+        # 3b. Look for bracketed option (e.g., "(A)", "[C]")
+        m_bracket = re.search(r'[\([]([A-Z])[\)]]', last_line)
+        if m_bracket:
+            ans = m_bracket.group(1)
+            if ans in valid_letters:
+                return ans
+                
+        # 3c. Short line fallback (e.g., last line is just "A" or "A.")
+        if len(last_line) < 10 and not re.search(r'[a-z]', lines[-1].lower()):
+            m_short = re.search(r'\b([A-Z])\b', last_line)
+            if m_short:
+                ans = m_short.group(1)
+                if ans in valid_letters:
+                    return ans
+                    
         return ''
 
     @staticmethod
@@ -504,9 +286,7 @@ class ManufactureMCQDatasetQBase(ImageBaseDataset):
             f1 = 0.0
         return acc, f1
 
-    def evaluate(self, eval_file, **judge_kwargs):
-        judge_kwargs.pop('nproc', None)
-
+    def evaluate(self, eval_file, **kwargs):
         data = load(eval_file)
         data = data.sort_values(by='index')
         data['prediction'] = [str(x) for x in data['prediction']]
@@ -523,7 +303,7 @@ class ManufactureMCQDatasetQBase(ImageBaseDataset):
                 c for c in string.ascii_uppercase
                 if c in meta_row and not pd.isna(meta_row[c])
             )
-            pred_letter = self._extract_letter(row['prediction'].strip().upper(), valid_letters)
+            pred_letter = self._extract_letter(row['prediction'].strip(), valid_letters)
             ans_raw = row['answer']
             gt_letter = str(ans_raw).strip().upper() if not pd.isna(ans_raw) else ''
 
@@ -538,7 +318,6 @@ class ManufactureMCQDatasetQBase(ImageBaseDataset):
         dump(data, detail_file)
 
         overall_acc, overall_f1 = self._metrics(preds, gts, data['hit'].tolist())
-
         throughput = _read_throughput(eval_file)
 
         rows = []
@@ -570,11 +349,188 @@ class ManufactureMCQDatasetQBase(ImageBaseDataset):
         return acc_df
 
 
+class ManufactureMCQDatasetQMultiBase(ManufactureMCQDatasetQBase):
+    """Multi-select variant of the Q-series base."""
+
+    def build_prompt(self, line):
+        if isinstance(line, int):
+            line = self.data.iloc[line]
+
+        tgt_path = self.dump_image(line)
+        question = line['question']
+        options = {
+            c: line[c]
+            for c in string.ascii_uppercase
+            if c in line and not pd.isna(line[c])
+        }
+        options_prompt = '\n'.join(f'{k}. {v}' for k, v in options.items())
+        
+        prompt = (
+            f'{question}\n'
+            f'{options_prompt}\n'
+            'This question may have one or more correct answers. '
+            'Please directly provide your final answer by enclosing the selected option letters '
+            'separated by semicolons in <answer> tags (e.g., <answer>A;C;D</answer>).'
+        )
+
+        msgs = []
+        if isinstance(tgt_path, list):
+            msgs.extend([dict(type='image', value=p) for p in tgt_path])
+        else:
+            msgs = [dict(type='image', value=tgt_path)]
+        msgs.append(dict(type='text', value=prompt))
+        return msgs
+
+    @staticmethod
+    def _extract_multi_letters(pred_str, valid_letters):
+        """Pull a set of option letters out of a free-form prediction string with strict fallback."""
+        pred_str = str(pred_str).strip()
+        
+        # 0. 提前拦截最简单的情况：纯单个字母，或者类似 "A;B", "A, C" 的纯选项字符串
+        # 只要整个字符串只包含大写字母和分隔符，就直接提取
+        if re.match(r'^[A-Z\s,;&]+$', pred_str.upper()):
+            letters = set(re.findall(r'[A-Z]', pred_str.upper()))
+            valid_found = frozenset(letters & valid_letters)
+            if valid_found:
+                return valid_found
+
+        # 1. Try <answer> tags
+        m_tag = re.search(r'<answer>\s*(.*?)\s*</answer>', pred_str, re.IGNORECASE | re.DOTALL)
+        if m_tag:
+            content = m_tag.group(1).upper()
+            letters = set(re.findall(r'[A-Z]', content))
+            valid_found = frozenset(letters & valid_letters)
+            if valid_found:
+                return valid_found
+
+        # 2. Strict Fallback Strategy
+        lines = [ln.strip() for ln in pred_str.split('\n') if ln.strip()]
+        if not lines:
+            return frozenset()
+            
+        last_line = lines[-1].upper()
+        
+        # 2a. Look for explicit prefix (e.g., "ANSWER: A, C", "OPTIONS: A AND B")
+        m_prefix = re.search(r'(?:ANSWER|CORRECT|OPTION)S?[\s:=]+([A-Z\s,;AND&]+)', last_line)
+        if m_prefix:
+            letters = set(re.findall(r'[A-Z]', m_prefix.group(1)))
+            valid_found = frozenset(letters & valid_letters)
+            if valid_found:
+                return valid_found
+
+        # 2b. Look for bracketed options (e.g., "(A)", "[B]")
+        bracket_letters = set(re.findall(r'[\([]([A-Z])[\)]]', last_line))
+        valid_found = frozenset(bracket_letters & valid_letters)
+        if valid_found:
+            return valid_found
+            
+        # 2c. Short line fallback (e.g., last line is just "A, C" or "A")
+        # 修复了原来的 bug：直接判断原字符串中是否不包含小写字母，而不是 lower() 之后
+        if len(last_line) < 10 and not re.search(r'[a-z]', lines[-1]):
+            letters = set(re.findall(r'[A-Z]', last_line))
+            valid_found = frozenset(letters & valid_letters)
+            if valid_found:
+                return valid_found
+
+        return frozenset()
+
+    def evaluate(self, eval_file, **kwargs):
+        data = load(eval_file)
+        data = data.sort_values(by='index')
+        data['prediction'] = [str(x) for x in data['prediction']]
+
+        meta = self.data
+        meta_idx = {str(row['index']): row for _, row in meta.iterrows()}
+
+        hits, f1s, logs, pred_strs, gt_strs = [], [], [], [], []
+
+        for i in range(len(data)):
+            row = data.iloc[i]
+            idx = str(row['index'])
+            meta_row = meta_idx.get(idx, row)
+
+            valid_letters = frozenset(
+                c for c in string.ascii_uppercase
+                if c in meta_row and not pd.isna(meta_row[c])
+            )
+            
+            pred_set = self._extract_multi_letters(row['prediction'], valid_letters)
+
+            ans_raw = row['answer']
+            if pd.isna(ans_raw) or str(ans_raw).strip() in ('', 'None', 'nan'):
+                gt_set = frozenset()
+            else:
+                gt_set = frozenset(x.strip().upper() for x in str(ans_raw).split(';') if x.strip())
+
+            hit = int(pred_set == gt_set)
+
+            if pred_set == gt_set:
+                f1 = 1.0
+            elif pred_set and gt_set:
+                tp = len(pred_set & gt_set)
+                precision = tp / len(pred_set)
+                recall = tp / len(gt_set)
+                denom = precision + recall
+                f1 = (2 * precision * recall / denom) if denom > 0 else 0.0
+            else:
+                f1 = 0.0
+
+            hits.append(hit)
+            f1s.append(f1)
+            logs.append('Extracted via regex/tags')
+            pred_strs.append(';'.join(sorted(pred_set)))
+            gt_strs.append(';'.join(sorted(gt_set)))
+
+        data['hit'] = hits
+        data['option_f1'] = f1s
+        data['log'] = logs
+        data['pred_letters'] = pred_strs
+        data['gt_letters'] = gt_strs
+
+        detail_file = get_intermediate_file_path(eval_file, '_detail')
+        dump(data, detail_file)
+
+        throughput = _read_throughput(eval_file)
+
+        rows = []
+        row0 = {
+            'split': 'Overall',
+            'ExactMatch': np.mean(hits),
+            'OptionF1': np.mean(f1s),
+            'n': len(hits),
+        }
+        if throughput is not None:
+            row0['throughput(samples/s)'] = round(throughput, 3)
+        rows.append(row0)
+
+        for col in ['category', 'difficulty']:
+            if col not in data.columns:
+                continue
+            for val in sorted(data[col].dropna().unique()):
+                sub = data[data[col] == val]
+                entry = {
+                    'split': str(val),
+                    'ExactMatch': np.mean(sub['hit']),
+                    'OptionF1': np.mean(sub['option_f1']),
+                    'n': len(sub),
+                }
+                if throughput is not None:
+                    entry['throughput(samples/s)'] = round(throughput, 3)
+                rows.append(entry)
+
+        acc_df = pd.DataFrame(rows)
+        score_file = get_intermediate_file_path(eval_file, '_acc', 'csv')
+        dump(acc_df, score_file)
+
+        logger.info(f'\n{acc_df.to_string(index=False)}')
+        return acc_df
+
+
 # --------------------------------------------------------------------------- #
-# Per-batch dataset classes (update DATA_ROOT when each batch arrives)        #
+# Per-batch dataset classes                                                   #
 # --------------------------------------------------------------------------- #
 
-class ManufactureMCQDatasetQ1(ManufactureMCQDatasetQBase):
+class ManufactureMCQDatasetQ1(ManufactureMCQDatasetQMultiBase):
     DATASET_URL = {'benchmark_q1': ''}
     DATA_ROOT = '/mnt/nfs/zyxing/VLMEvalKit/Q1'
 
@@ -590,7 +546,7 @@ class ManufactureMCQDatasetQ2(ManufactureMCQDatasetQBase):
         super().__init__(dataset=dataset, skip_noimg=skip_noimg)
 
 
-class ManufactureMCQDatasetQ3(ManufactureMCQDatasetQBase):
+class ManufactureMCQDatasetQ3(ManufactureMCQDatasetQMultiBase):
     DATASET_URL = {'benchmark_q3': ''}
     DATA_ROOT = '/mnt/nfs/zyxing/VLMEvalKit/Q3'
 
@@ -614,30 +570,27 @@ class ManufactureMCQDatasetQ5(ManufactureMCQDatasetQBase):
         super().__init__(dataset=dataset, skip_noimg=skip_noimg)
 
 
+class ManufactureMCQDatasetQ2Exp1(ManufactureMCQDatasetQBase):
+    DATASET_URL = {'exp1_add_manufacturing': ''}
+    DATA_ROOT = '/mnt/nfs/zyxing/VLMEvalKit/Q2'
+
+    def __init__(self, dataset='exp1_add_manufacturing', skip_noimg=True):
+        super().__init__(dataset=dataset, skip_noimg=skip_noimg)
+
+
+class ManufactureMCQDatasetQ2Exp2(ManufactureMCQDatasetQBase):
+    DATASET_URL = {'exp2_add_fabricated': ''}
+    DATA_ROOT = '/mnt/nfs/zyxing/VLMEvalKit/Q2'
+
+    def __init__(self, dataset='exp2_add_fabricated', skip_noimg=True):
+        super().__init__(dataset=dataset, skip_noimg=skip_noimg)
+
+
 # --------------------------------------------------------------------------- #
 # Cross-dataset aggregation                                                   #
 # --------------------------------------------------------------------------- #
 
 def combine_manufacture_q_results(detail_files, eval_files=None, output_file=None):
-    """Aggregate metrics across multiple ManufactureMCQDatasetQ* evaluations.
-
-    Call this after running evaluate() on whichever Q-datasets you have so far.
-    Each evaluate() saves a *_detail.tsv; pass those paths here.
-
-    Parameters
-    ----------
-    detail_files : dict[str, str]
-        {label: path_to_detail_tsv}  e.g. {'Q1': '/path/Q1_detail.tsv', 'Q2': '...'}
-    eval_files : dict[str, str], optional
-        {label: original_eval_file} — used to read *_timing.json sidecars for
-        throughput. Keys must match detail_files. Omit if timing is not needed.
-    output_file : str, optional
-        If given, the combined metrics DataFrame is saved here as CSV.
-
-    Returns
-    -------
-    pd.DataFrame with columns: split, ACC, F1_macro, n[, throughput(samples/s)]
-    """
     frames = []
     for label, path in detail_files.items():
         df = load(path)
