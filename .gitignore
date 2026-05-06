@@ -225,3 +225,7 @@ flash_attn*
 Q2/*
 !Q2/convert_to_tsv.py
 origin_Q2
+Q5/convert_to_tsv.py
+Q4/q4_images
+Q3/q3_images
+Q1/q1_images

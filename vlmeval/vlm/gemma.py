@@ -64,7 +64,7 @@ class Gemma3(BaseModel):
             logging.critical('Please install torch and transformers')
             raise e
 
-        self.use_vllm = kwargs.get('use_vllm', False)
+        self.use_vllm = kwargs.pop('use_vllm', False)
         self.limit_mm_per_prompt = 24
         if self.use_vllm:
             from vllm import LLM
@@ -90,14 +90,16 @@ class Gemma3(BaseModel):
                 )
             self.llm = LLM(
                 model=model_path,
-                max_num_seqs=kwargs.get("vllm_max_num_seqs", 8),
+                max_num_seqs=kwargs.pop("vllm_max_num_seqs", 8),
                 max_model_len=16384,
                 limit_mm_per_prompt={"image": self.limit_mm_per_prompt},
                 tensor_parallel_size=tp_size,
-                gpu_memory_utilization=kwargs.get("gpu_utils", 0.9),
+                gpu_memory_utilization=kwargs.pop("gpu_utils", 0.9),
             )
             # export VLLM_WORKER_MULTIPROC_METHOD=spawn
         else:
+            kwargs.pop("gpu_utils", None)
+            kwargs.pop("vllm_max_num_seqs", None)
             self.model = Gemma3ForConditionalGeneration.from_pretrained(
                 model_path, device_map="cuda", attn_implementation="flash_attention_2", torch_dtype=torch.bfloat16
             ).eval()

@@ -1387,7 +1387,8 @@ qwen3vl_series = {
         repetition_penalty=1.0,
         presence_penalty=0.0,
         top_p=0.95,
-        top_k=20
+        top_k=20,
+        gpu_utils=0.4
     ),
     "Qwen3-VL-8B-Instruct": partial(
         vlm.Qwen3VLChat,
@@ -1402,7 +1403,7 @@ qwen3vl_series = {
         max_pixels=1280 * 28 * 28,
         top_p=0.8,
         top_k=20,
-        gpu_utils=0.3,
+        gpu_utils=0.4,
     ),
     "Qwen3-VL-4B-Instruct": partial(
         vlm.Qwen3VLChat,
@@ -1451,7 +1452,8 @@ qwen3vl_series = {
         repetition_penalty=1.0,
         presence_penalty=0.0,
         top_p=0.95,
-        top_k=20
+        top_k=20,
+        gpu_utils=0.95
     ),
     "Qwen3-VL-32B-Thinking": partial(
         vlm.Qwen3VLChat,
@@ -1599,7 +1601,7 @@ qwen3_5_series = {
         top_k=20,
         presence_penalty=1.5,
         max_new_tokens=32768,
-        gpu_utils=0.6
+        gpu_utils=0.9
     ),
 }
 
@@ -1937,7 +1939,7 @@ qwen2vl_series = {
         min_pixels=256 * 28 * 28,
         max_pixels=1280 * 28 * 28,
         use_custom_prompt=False,
-        gpu_utils=0.35,
+        gpu_utils=0.4,
     ),
     "Qwen2.5-VL-3B-Instruct-AWQ": partial(
         vlm.Qwen2VLChat,
@@ -1952,7 +1954,7 @@ qwen2vl_series = {
         min_pixels=256 * 28 * 28,
         max_pixels=1280 * 28 * 28,
         use_custom_prompt=False,
-        gpu_utils=0.44,
+        gpu_utils=0.45,
     ),
     "Qwen2.5-VL-7B-Instruct-ForVideo": partial(
         vlm.Qwen2VLChat,

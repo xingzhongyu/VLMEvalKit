@@ -8,7 +8,7 @@ import pillow_heif
 # 注册 HEIF/HEIC 支持，让 PIL 能够打开这些 ISO Media 文件
 pillow_heif.register_heif_opener()
 
-INPUT = '/mnt/nfs/zyxing/VLMEvalKit/Q4/qa_dataset_unified_filtered_q4.jsonl'
+INPUT = '/mnt/nfs/zyxing/VLMEvalKit/Q4/qa_dataset_q4_final131.jsonl'
 OUTPUT = '/mnt/nfs/zyxing/VLMEvalKit/Q4/benchmark_q4.tsv'
 # Images extracted from q4_images.zip into q4_images/; JSONL paths use 'filtered_images/' prefix.
 IMAGE_BASE = '/mnt/nfs/zyxing/VLMEvalKit/Q4/q4_images'
@@ -59,7 +59,7 @@ iso_converted_images = []
 iso_failed_images = []
 
 for idx, r in enumerate(records):
-    rel = r['image'].removeprefix('filtered_images/')
+    rel = r['image'].removeprefix('q4_images/')
     abs_image = os.path.join(IMAGE_BASE, rel)
     
     # 1. 解析图片路径
@@ -79,7 +79,7 @@ for idx, r in enumerate(records):
             iso_failed_images.append((idx, resolved, error))
 
     # 3. 构建 TSV 行数据
-    answer = r.get('correct_letters', r['gt_letter']).replace(',', ';').replace(' ', '')
+    answer = ';'.join(r.get('gt_letters', []))
     row = {
         'index': idx,
         'question': r['question'],
@@ -92,7 +92,7 @@ for idx, r in enumerate(records):
         'manufacturer': r.get('company', ''),
         'material_capabilities': '',
         'process_capabilities': '',
-        'justification': r.get('gpt_reason', ''),
+        'justification': r.get('refined_rationale', ''),
         'answer_source': '',
     }
     for c in LETTERS:

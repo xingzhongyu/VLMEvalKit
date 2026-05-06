@@ -2,7 +2,7 @@ import json
 import csv
 import os
 
-INPUT = '/mnt/nfs/zyxing/VLMEvalKit/Q5/q5_hard_v7_1263.jsonl'
+INPUT = '/mnt/nfs/zyxing/VLMEvalKit/Q5/q5_hard_v8_1075.jsonl'
 OUTPUT = '/mnt/nfs/zyxing/VLMEvalKit/Q5/benchmark_q5.tsv'
 # Images live under Q2; use absolute paths so dump_image resolves them directly.
 IMAGE_BASE = '/mnt/nfs/zyxing/VLMEvalKit/Q2'
