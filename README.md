@@ -6,22 +6,41 @@
 
 English | [简体中文](/docs/zh-CN/README_zh-CN.md) | [日本語](/docs/ja/README_ja.md)
 
-<a href="https://rank.opencompass.org.cn/leaderboard-multimodal">🏆 OC Learderboard </a> •
+<a href="[https://rank.opencompass.org.cn/leaderboard-multimodal](https://rank.opencompass.org.cn/leaderboard-multimodal)">🏆 OC Learderboard </a> •
 <a href="#%EF%B8%8F-quickstart">🏗️Quickstart </a> •
 <a href="#-datasets-models-and-evaluation-results">📊Datasets & Models </a> •
 <a href="#%EF%B8%8F-development-guide">🛠️Development </a>
 
-<a href="https://huggingface.co/spaces/opencompass/open_vlm_leaderboard">🤗 HF Leaderboard</a> •
-<a href="https://huggingface.co/datasets/VLMEval/OpenVLMRecords">🤗 Evaluation Records</a> •
-<a href="https://huggingface.co/spaces/opencompass/openvlm_video_leaderboard">🤗 HF Video Leaderboard</a> •
+<a href="[https://huggingface.co/spaces/opencompass/open_vlm_leaderboard](https://huggingface.co/spaces/opencompass/open_vlm_leaderboard)">🤗 HF Leaderboard</a> •
+<a href="[https://huggingface.co/datasets/VLMEval/OpenVLMRecords](https://huggingface.co/datasets/VLMEval/OpenVLMRecords)">🤗 Evaluation Records</a> •
+<a href="[https://huggingface.co/spaces/opencompass/openvlm_video_leaderboard](https://huggingface.co/spaces/opencompass/openvlm_video_leaderboard)">🤗 HF Video Leaderboard</a> •
 
-<a href="https://discord.gg/evDT4GZmxN">🔊 Discord</a> •
-<a href="https://www.arxiv.org/abs/2407.11691">📝 Report</a> •
+<a href="[https://discord.gg/evDT4GZmxN](https://discord.gg/evDT4GZmxN)">🔊 Discord</a> •
+<a href="[https://www.arxiv.org/abs/2407.11691](https://www.arxiv.org/abs/2407.11691)">📝 Report</a> •
 <a href="#-the-goal-of-vlmevalkit">🎯Goal </a> •
 <a href="#%EF%B8%8F-citation">🖊️Citation </a>
 </div>
 
 **VLMEvalKit** (the python package name is **vlmeval**) is an **open-source evaluation toolkit** of **large vision-language models (LVLMs)**. It enables **one-command evaluation** of LVLMs on various benchmarks, without the heavy workload of data preparation under multiple repositories. In VLMEvalKit, we adopt **generation-based evaluation** for all LVLMs, and provide the evaluation results obtained with both **exact matching** and **LLM-based answer extraction**.
+
+---
+
+## 🌟 ManuVision-Bench (Paper Implementation)
+
+This repository is built upon VLMEvalKit and serves as the official evaluation framework for the paper **ManuVision-Bench: A Benchmark for Image-Grounded Manufacturing Reasoning and Supplier Discovery**.
+
+### 🚀 Quick Guide for ManuVision-Bench
+- **Environment Requirement**: Please ensure you are using **Python 3.10**.
+- **Task Structure**: The folders `Q1`, `Q2`, `Q3`, `Q4`, and `Q5` in this repository correspond to the subtasks defined in our paper.
+- **Reproduction**: You can easily reproduce the experiments reported in the paper by running the provided shell script:
+  ```bash
+  bash all_q.sh
+  ```
+- **Dataset Implementation**: The evaluation script and dataset loader specific to our benchmark can be found at `vlmeval/dataset/manufacture_mcq.py`.
+- **Evaluation Settings**: To guarantee deterministic and reproducible results, the parameter `do_sample` is strictly set to `False` across all evaluation methods.
+- **Data Acquisition**: For detailed instructions on how to acquire the data for tasks Q1~Q5, please refer to the data section in our original paper.
+
+---
 
 ## Recent Codebase Changes
 - **[2025-09-12]** **Major Update: Improved Handling for Models with Thinking Mode**
@@ -146,13 +165,13 @@ If you use VLMEvalKit in your research or wish to refer to published OpenSource 
 
 <p align="right"><a href="#top">🔝Back to top</a></p>
 
-[github-contributors-link]: https://github.com/open-compass/VLMEvalKit/graphs/contributors
-[github-contributors-shield]: https://img.shields.io/github/contributors/open-compass/VLMEvalKit?color=c4f042&labelColor=black&style=flat-square
-[github-forks-link]: https://github.com/open-compass/VLMEvalKit/network/members
-[github-forks-shield]: https://img.shields.io/github/forks/open-compass/VLMEvalKit?color=8ae8ff&labelColor=black&style=flat-square
-[github-issues-link]: https://github.com/open-compass/VLMEvalKit/issues
-[github-issues-shield]: https://img.shields.io/github/issues/open-compass/VLMEvalKit?color=ff80eb&labelColor=black&style=flat-square
-[github-license-link]: https://github.com/open-compass/VLMEvalKit/blob/main/LICENSE
-[github-license-shield]: https://img.shields.io/github/license/open-compass/VLMEvalKit?color=white&labelColor=black&style=flat-square
-[github-stars-link]: https://github.com/open-compass/VLMEvalKit/stargazers
-[github-stars-shield]: https://img.shields.io/github/stars/open-compass/VLMEvalKit?color=ffcb47&labelColor=black&style=flat-square
+[github-contributors-link]: [https://github.com/open-compass/VLMEvalKit/graphs/contributors](https://github.com/open-compass/VLMEvalKit/graphs/contributors)
+[github-contributors-shield]: [https://img.shields.io/github/contributors/open-compass/VLMEvalKit?color=c4f042&labelColor=black&style=flat-square](https://img.shields.io/github/contributors/open-compass/VLMEvalKit?color=c4f042&labelColor=black&style=flat-square)
+[github-forks-link]: [https://github.com/open-compass/VLMEvalKit/network/members](https://github.com/open-compass/VLMEvalKit/network/members)
+[github-forks-shield]: [https://img.shields.io/github/forks/open-compass/VLMEvalKit?color=8ae8ff&labelColor=black&style=flat-square](https://img.shields.io/github/forks/open-compass/VLMEvalKit?color=8ae8ff&labelColor=black&style=flat-square)
+[github-issues-link]: [https://github.com/open-compass/VLMEvalKit/issues](https://github.com/open-compass/VLMEvalKit/issues)
+[github-issues-shield]: [https://img.shields.io/github/issues/open-compass/VLMEvalKit?color=ff80eb&labelColor=black&style=flat-square](https://img.shields.io/github/issues/open-compass/VLMEvalKit?color=ff80eb&labelColor=black&style=flat-square)
+[github-license-link]: [https://github.com/open-compass/VLMEvalKit/blob/main/LICENSE](https://github.com/open-compass/VLMEvalKit/blob/main/LICENSE)
+[github-license-shield]: [https://img.shields.io/github/license/open-compass/VLMEvalKit?color=white&labelColor=black&style=flat-square](https://img.shields.io/github/license/open-compass/VLMEvalKit?color=white&labelColor=black&style=flat-square)
+[github-stars-link]: [https://github.com/open-compass/VLMEvalKit/stargazers](https://github.com/open-compass/VLMEvalKit/stargazers)
+[github-stars-shield]: [https://img.shields.io/github/stars/open-compass/VLMEvalKit?color=ffcb47&labelColor=black&style=flat-square](https://img.shields.io/github/stars/open-compass/VLMEvalKit?color=ffcb47&labelColor=black&style=flat-square)
