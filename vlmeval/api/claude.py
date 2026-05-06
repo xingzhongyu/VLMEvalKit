@@ -1,3 +1,5 @@
+import base64
+import io
 import json
 import mimetypes
 import os
@@ -26,6 +28,8 @@ official_headers = {
 
 
 class Claude_Wrapper(BaseAPI):
+    MAX_IMAGE_BYTES = 5 * 1024 * 1024
+    MAX_IMAGE_BYTES_SAFE = int(MAX_IMAGE_BYTES * 0.75)
 
     is_api: bool = True
 
@@ -67,14 +71,44 @@ class Claude_Wrapper(BaseAPI):
 
     def encode_image_file_to_base64(self, image_path, target_size=-1, fmt='.jpg'):
         image = Image.open(image_path)
-        if fmt in ('.jpg', '.jpeg'):
-            format = 'JPEG'
-        elif fmt == '.png':
-            format = 'PNG'
-        else:
-            print(f'Unsupported image format: {fmt}, will cause media type match error.')
+        media_type = mimetypes.types_map.get(fmt, None)
+        pil_fmt = 'JPEG' if fmt in ('.jpg', '.jpeg') else 'PNG' if fmt == '.png' else None
+        source_too_large = osp.getsize(image_path) > self.MAX_IMAGE_BYTES
 
-        return encode_image_to_base64(image, target_size=target_size, fmt=format)
+        if pil_fmt is not None:
+            b64 = encode_image_to_base64(image, target_size=target_size, fmt=pil_fmt)
+            raw = base64.b64decode(b64)
+            # Anthropic validates the effective payload size tightly. For images
+            # near the 5 MB boundary, prefer the JPEG fallback path instead of
+            # sending a borderline PNG that may still be rejected upstream.
+            if len(raw) <= self.MAX_IMAGE_BYTES_SAFE and not source_too_large:
+                return media_type, b64
+
+        # Anthropic rejects images larger than 5 MB. Fall back to progressively
+        # smaller JPEG encodings until the payload fits.
+        image = image.convert('RGB')
+        max_dim_candidates = [2048, 1600, 1280, 1024, 768]
+        quality_candidates = [90, 80, 70, 60, 50, 40]
+        best = None
+
+        for max_dim in max_dim_candidates:
+            resized = image.copy()
+            resized.thumbnail((max_dim, max_dim), Image.Resampling.LANCZOS)
+            for quality in quality_candidates:
+                buf = io.BytesIO()
+                resized.save(buf, format='JPEG', quality=quality, optimize=True)
+                raw = buf.getvalue()
+                best = raw
+                if len(raw) <= self.MAX_IMAGE_BYTES:
+                    return 'image/jpeg', base64.b64encode(raw).decode('utf-8')
+
+        logger.warning(
+            'Image %s still exceeds Anthropic size limit after compression (%d bytes). '
+            'Sending smallest attempted JPEG.',
+            image_path,
+            len(best) if best is not None else -1,
+        )
+        return 'image/jpeg', base64.b64encode(best).decode('utf-8')
 
     # inputs can be a lvl-2 nested list: [content1, content2, content3, ...]
     # content can be a string or a list of image & text
@@ -89,7 +123,7 @@ class Claude_Wrapper(BaseAPI):
                 elif msg['type'] == 'image':
                     pth = msg['value']
                     suffix = osp.splitext(pth)[-1].lower()
-                    media_type = mimetypes.types_map.get(suffix, None)
+                    media_type, data = self.encode_image_file_to_base64(pth, target_size=4096, fmt=suffix)
                     assert media_type is not None
 
                     content_list.append(dict(
@@ -97,7 +131,7 @@ class Claude_Wrapper(BaseAPI):
                         source={
                             'type': 'base64',
                             'media_type': media_type,
-                            'data': self.encode_image_file_to_base64(pth, target_size=4096, fmt=suffix)
+                            'data': data
                         }))
         else:
             assert all([x['type'] == 'text' for x in inputs])
@@ -122,6 +156,7 @@ class Claude_Wrapper(BaseAPI):
             'model': self.model,
             'max_tokens': self.max_tokens,
             'messages': self.prepare_inputs(inputs),
+            'temperature': self.temperature,
             **kwargs
         }
         if self.system_prompt is not None:

@@ -4,7 +4,7 @@
 set -e
 
 # 定义需要运行的 Q 编号列表
-Q_LIST=(4 3 1 5 2)
+Q_LIST=(1 2 3 4 5)
 
 # 你的主评测脚本名称
 MAIN_SCRIPT="run_benchmark_all.sh"

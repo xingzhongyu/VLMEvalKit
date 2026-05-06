@@ -1,9 +1,0 @@
-group: manufacture_reasoning_qa
-task:
-  - mfg_feasibility_qa
-  - mfg_capability_gap
-aggregate_metric_list:
-  - metric: acc
-    aggregation: mean
-  - metric: strict_acc
-    aggregation: mean

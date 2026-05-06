@@ -92,6 +92,8 @@ ungrouped = {
     "Falcon2-VLM-11B": partial(vlm.Falcon2VLM, model_path="tiiuae/falcon-11B-vlm"),
     "KVL": partial(vlm.InternVLChat, model_path="amoeba04/KVL", version="V2.0"),
 }
+if vlm.mPLUG_Owl3 is None:
+    ungrouped.pop("mPLUG-Owl3", None)
 
 o1_key = os.environ.get('O1_API_KEY', None)
 o1_base = os.environ.get('O1_API_BASE', None)
@@ -544,6 +546,86 @@ api_models = {
         verbose=False,
         timeout=1800
     ),
+    "ClaudeSonnet45_20250929": partial(
+        api.Claude3V,
+        model="claude-sonnet-4-5-20250929",
+        temperature=0,
+        retry=10,
+        verbose=False,
+        timeout=1800
+    ),
+    "claude-sonnet-4-5-20250929": partial(
+        api.Claude3V,
+        model="claude-sonnet-4-5-20250929",
+        temperature=0,
+        retry=10,
+        verbose=False,
+        timeout=1800
+    ),
+    "ClaudeSonnet46": partial(
+        api.Claude3V,
+        model="claude-sonnet-4-6",
+        temperature=0,
+        retry=10,
+        verbose=False,
+        timeout=1800
+    ),
+    "claude-sonnet-4-6": partial(
+        api.Claude3V,
+        model="claude-sonnet-4-6",
+        temperature=0,
+        retry=10,
+        verbose=False,
+        timeout=1800
+    ),
+    "claude-haiku-4-5-20251001": partial(
+        api.Claude3V,
+        model="claude-haiku-4-5-20251001",
+        temperature=0,
+        retry=10,
+        verbose=False,
+        timeout=1800
+    ),
+    "claude-opus-4-1-20250805": partial(
+        api.Claude3V,
+        model="claude-opus-4-1-20250805",
+        temperature=0,
+        retry=10,
+        verbose=False,
+        timeout=1800
+    ),
+    "claude-opus-4-5-20251101": partial(
+        api.Claude3V,
+        model="claude-opus-4-5-20251101",
+        temperature=0,
+        retry=10,
+        verbose=False,
+        timeout=1800
+    ),
+    "ClaudeOpus46": partial(
+        api.Claude3V,
+        model="claude-opus-4-6",
+        temperature=0,
+        retry=10,
+        verbose=False,
+        timeout=1800
+    ),
+    "claude-opus-4-6": partial(
+        api.Claude3V,
+        model="claude-opus-4-6",
+        temperature=0,
+        retry=10,
+        verbose=False,
+        timeout=1800
+    ),
+    "claude-opus-4-7": partial(
+        api.Claude3V,
+        model="claude-opus-4-7",
+        temperature=0,
+        retry=10,
+        verbose=False,
+        timeout=1800
+    ),
     "Claude-Opus-4-6": partial(
         api.GPT4V,
         model="claude-opus-4-6-thinking",
@@ -863,6 +945,41 @@ api_models = {
 api_models['gpt-5'] = cp.deepcopy(api_models['gpt-5-2025-08-07'])
 api_models['gpt-5-mini'] = cp.deepcopy(api_models['gpt-5-mini-2025-08-07'])
 api_models['gpt-5-nano'] = cp.deepcopy(api_models['gpt-5-nano-2025-08-07'])
+api_models['gpt-4o'] = cp.deepcopy(api_models['GPT4o'])
+api_models['gpt-4o-2024-11-20'] = cp.deepcopy(api_models['GPT4o_20241120'])
+api_models['gpt-4o-mini'] = cp.deepcopy(api_models['GPT4o_MINI'])
+api_models['gpt-4o-mini-2024-07-18'] = cp.deepcopy(api_models['GPT4o_MINI'])
+api_models['chatgpt-4o-latest'] = cp.deepcopy(api_models['ChatGPT4o'])
+api_models['gpt-4.1'] = cp.deepcopy(api_models['gpt-4.1-2025-04-14'])
+api_models['gpt-4.1-mini'] = cp.deepcopy(api_models['gpt-4.1-mini-2025-04-14'])
+api_models['gpt-4.1-nano'] = cp.deepcopy(api_models['gpt-4.1-nano-2025-04-14'])
+api_models['gpt-5.1'] = cp.deepcopy(api_models['gpt-5.1-2025-11-13'])
+api_models['gpt-5.2'] = cp.deepcopy(api_models['GPT-5.2'])
+api_models['gpt-5.4'] = cp.deepcopy(api_models['GPT-5.4-2026-03-05'])
+api_models['gpt-5.4-mini'] = partial(
+    api.GPT4V,
+    model="gpt-5.4-mini",
+    retry=10,
+    timeout=3600,
+    max_tokens=65536,
+    img_detail='high',
+)
+api_models['gpt-5.4-nano'] = partial(
+    api.GPT4V,
+    model="gpt-5.4-nano",
+    retry=10,
+    timeout=3600,
+    max_tokens=65536,
+    img_detail='high',
+)
+api_models['gpt-5.5'] = partial(
+    api.GPT4V,
+    model="gpt-5.5",
+    retry=10,
+    timeout=3600,
+    max_tokens=65536,
+    img_detail='high',
+)
 
 emu_series = {
     "emu2_chat": partial(vlm.Emu, model_path="BAAI/Emu2-Chat"),
@@ -1039,30 +1156,36 @@ varco_vision_series = {
     "varco-vision-hf": partial(
         vlm.LLaVA_OneVision_HF, model_path="NCSOFT/VARCO-VISION-14B-HF"
     ),
-    "varco-vision-2-1.7b": partial(
-        vlm.VarcoVision, model_path="NCSOFT/VARCO-VISION-2.0-1.7B"
-    ),
-    "varco-vision-2-14b": partial(
-        vlm.VarcoVision, model_path="NCSOFT/VARCO-VISION-2.0-14B"
-    ),
 }
+if vlm.VarcoVision is not None:
+    varco_vision_series.update({
+        "varco-vision-2-1.7b": partial(
+            vlm.VarcoVision, model_path="NCSOFT/VARCO-VISION-2.0-1.7B"
+        ),
+        "varco-vision-2-14b": partial(
+            vlm.VarcoVision, model_path="NCSOFT/VARCO-VISION-2.0-14B"
+        ),
+    })
 
 vita_series = {
     "vita": partial(vlm.VITA, model_path="VITA-MLLM/VITA", root=VITA_ROOT),
     "vita_qwen2": partial(vlm.VITAQwen2, model_path="VITA-MLLM/VITA-1.5", root=VITA_ROOT),
 }
 
-long_vita_series = {
-    "Long-VITA-16K": partial(
-        vlm.LongVITA, model_path="VITA-MLLM/Long-VITA-16K_HF", max_num_frame=128
-    ),
-    "Long-VITA-128K": partial(
-        vlm.LongVITA, model_path="VITA-MLLM/Long-VITA-128K_HF", max_num_frame=256
-    ),
-    "Long-VITA-1M": partial(
-        vlm.LongVITA, model_path="VITA-MLLM/Long-VITA-1M_HF", max_num_frame=256
-    ),
-}
+if vlm.LongVITA is not None:
+    long_vita_series = {
+        "Long-VITA-16K": partial(
+            vlm.LongVITA, model_path="VITA-MLLM/Long-VITA-16K_HF", max_num_frame=128
+        ),
+        "Long-VITA-128K": partial(
+            vlm.LongVITA, model_path="VITA-MLLM/Long-VITA-128K_HF", max_num_frame=256
+        ),
+        "Long-VITA-1M": partial(
+            vlm.LongVITA, model_path="VITA-MLLM/Long-VITA-1M_HF", max_num_frame=256
+        ),
+    }
+else:
+    long_vita_series = {}
 
 interns1_mini = {
     "Intern-S1-mini": partial(
@@ -1751,12 +1874,14 @@ cambrian_series = {
     "cambrian_8b": partial(vlm.Cambrian, model_path="nyu-visionx/cambrian-8b"),
     "cambrian_13b": partial(vlm.Cambrian, model_path="nyu-visionx/cambrian-13b"),
     "cambrian_34b": partial(vlm.Cambrian, model_path="nyu-visionx/cambrian-34b"),
-    
-    "cambrian-s-0.5b": partial(vlm.CambrianS, model_path="nyu-visionx/Cambrian-S-0.5B"),
-    "cambrian-s-1.5b": partial(vlm.CambrianS, model_path="nyu-visionx/Cambrian-S-1.5B"),
-    "cambrian-s-3b": partial(vlm.CambrianS, model_path="nyu-visionx/Cambrian-S-3B"),
-    "cambrian-s-7b": partial(vlm.CambrianS, model_path="nyu-visionx/Cambrian-S-7B"),
 }
+if vlm.CambrianS is not None:
+    cambrian_series.update({
+        "cambrian-s-0.5b": partial(vlm.CambrianS, model_path="nyu-visionx/Cambrian-S-0.5B"),
+        "cambrian-s-1.5b": partial(vlm.CambrianS, model_path="nyu-visionx/Cambrian-S-1.5B"),
+        "cambrian-s-3b": partial(vlm.CambrianS, model_path="nyu-visionx/Cambrian-S-3B"),
+        "cambrian-s-7b": partial(vlm.CambrianS, model_path="nyu-visionx/Cambrian-S-7B"),
+    })
 
 chameleon_series = {
     "chameleon_7b": partial(vlm.Chameleon, model_path="facebook/chameleon-7b"),
@@ -2340,10 +2465,13 @@ rbdashmm_api_series_lmdeploy = {
     )
 }
 
-logics_series = {
-    "Logics-Thinking-8B": partial(vlm.Logics_Thinking,model_path='Logics-MLLM/Logics-Thinking-8B'),
-    "Logics-Thinking-32B": partial(vlm.Logics_Thinking,model_path='Logics-MLLM/Logics-Thinking-32B'),
-}
+if vlm.Logics_Thinking is not None:
+    logics_series = {
+        "Logics-Thinking-8B": partial(vlm.Logics_Thinking, model_path='Logics-MLLM/Logics-Thinking-8B'),
+        "Logics-Thinking-32B": partial(vlm.Logics_Thinking, model_path='Logics-MLLM/Logics-Thinking-32B'),
+    }
+else:
+    logics_series = {}
 
 insight_v_series = {
     "insightv": partial(vlm.InsightV, pretrained_reason="THUdyh/Insight-V-Reason-LLaMA3", pretrained_summary="THUdyh/Insight-V-Summary-LLaMA3"),
@@ -2477,11 +2605,14 @@ spatial_related_models = {
         max_pixels=16384 * 28 * 28,
         use_custom_prompt=False,
     ),
-    "VLM-3R": partial(
-        vlm.VLM3R, 
-        model_path="Journey9ni/vlm-3r-llava-qwen2-lora",
-    ),
 }
+if vlm.VLM3R is not None:
+    spatial_related_models.update({
+        "VLM-3R": partial(
+            vlm.VLM3R,
+            model_path="Journey9ni/vlm-3r-llava-qwen2-lora",
+        ),
+    })
 
 sensenova_si_series = {
     # SenseNova-SI-1.0 series
