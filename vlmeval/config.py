@@ -8,7 +8,7 @@ import vlmeval.vlm as vlm
 PandaGPT_ROOT = None
 MiniGPT4_ROOT = None
 TransCore_ROOT = None
-Yi_ROOT = "/mnt/nfs/zyxing/Yi"
+Yi_ROOT = "../../Yi"
 OmniLMM_ROOT = None
 Mini_Gemini_ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "MGM")
 VXVERSE_ROOT = None

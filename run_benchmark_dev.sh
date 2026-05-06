@@ -17,7 +17,7 @@ export VLMEVAL_TEMPERATURE=0
 export VLMEVAL_TOP_P=1
 export VLMEVAL_TOP_K=1
 
-BASE_DATA_ARGS="--data benchmark_q${Q_NUM}_dev --verbose --judge gpt-4o --work-dir /mnt/nfs/zyxing/VLMEvalKit/Q${Q_NUM}/outputs_dev"
+BASE_DATA_ARGS="--data benchmark_q${Q_NUM}_dev --verbose --judge gpt-4o --work-dir Q${Q_NUM}/outputs_dev"
 LOG_DIR="logs_dev/q${Q_NUM}_$(date +%Y%m%d_%H%M%S)"
 mkdir -p "$LOG_DIR"
 
