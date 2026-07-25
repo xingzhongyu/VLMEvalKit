@@ -28,7 +28,12 @@ export VLMEVAL_TOP_K=1
 # ==========================================
 # 2. 动态替换 BASE_DATA_ARGS 中的 Q 编号
 # ==========================================
-BASE_DATA_ARGS="--data benchmark_q${Q_NUM} --verbose --judge gpt-4o --work-dir /mnt/nfs/zyxing/VLMEvalKit/Q${Q_NUM}/outputs"
+
+# todo:
+#  1. remove judge?
+#  2. change output path to relative path
+#  3. also update run_benchmark_dev.sh
+BASE_DATA_ARGS="--data benchmark_q${Q_NUM} --verbose --judge gpt-4o --work-dir Q${Q_NUM}/outputs"
 LOG_DIR="logs/q${Q_NUM}_$(date +%Y%m%d_%H%M%S)" # 日志文件夹也加上 Q 编号，方便区分
 mkdir -p "$LOG_DIR"
 

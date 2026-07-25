@@ -8,7 +8,10 @@ from .bagel_umm import Bagel
 from .base import BaseModel
 from .bunnyllama3 import BunnyLLama3
 from .cambrian import Cambrian
-from .cambrian_s import CambrianS
+try:
+    from .cambrian_s import CambrianS
+except Exception:
+    CambrianS = None
 from .chameleon import Chameleon
 from .cogvlm import CogVlm, GLM4v, GLMThinking
 from .cosmos import Cosmos
@@ -39,8 +42,14 @@ from .llama4 import llama4
 from .llama_vision import llama_vision
 from .llava import (LLaVA, LLaVA_Next, LLaVA_Next2, LLaVA_OneVision, LLaVA_OneVision_1_5,
                     LLaVA_OneVision_HF, LLaVA_XTuner)
-from .logics import Logics_Thinking
-from .long_vita import LongVITA
+try:
+    from .logics import Logics_Thinking
+except Exception:
+    Logics_Thinking = None
+try:
+    from .long_vita import LongVITA
+except Exception:
+    LongVITA = None
 from .mantis import Mantis
 from .mgm import Mini_Gemini
 from .minicpm_v import (MiniCPM_Llama3_V, MiniCPM_o_2_6, MiniCPM_o_4_5, MiniCPM_V, MiniCPM_V_2_6,
@@ -53,7 +62,10 @@ from .molmo import molmo
 from .monkey import Monkey, MonkeyChat
 from .moondream import Moondream1, Moondream2, Moondream3
 from .mplug_owl2 import mPLUG_Owl2
-from .mplug_owl3 import mPLUG_Owl3
+try:
+    from .mplug_owl3 import mPLUG_Owl3
+except Exception:
+    mPLUG_Owl3 = None
 from .nvlm import NVLM
 from .ola import Ola
 from .omchat import OmChat
@@ -85,7 +97,10 @@ from .transcore_m import TransCoreM
 from .treevgr import TreeVGR
 from .ursa import UrsaChat
 from .valley import Valley2Chat, Valley3Chat
-from .varco_vision import VarcoVision
+try:
+    from .varco_vision import VarcoVision
+except Exception:
+    VarcoVision = None
 from .video_llm import (Chatunivi, LLaMAVID, PLLaVA, VideoChat2_HD, VideoChatGPT, VideoLLaVA,
                         VideoLLaVA_HF)
 from .vila import NVILA, VILA
@@ -93,7 +108,10 @@ from .vintern_chat import VinternChat
 from .visualglm import VisualGLM
 from .vita import VITA, VITAQwen2
 from .vlaa_thinker import VLAAThinkerChat
-from .vlm3r import VLM3R
+try:
+    from .vlm3r import VLM3R
+except Exception:
+    VLM3R = None
 from .vlm_r1 import VLMR1Chat
 from .vxverse import VXVERSE
 from .wemm import WeMM

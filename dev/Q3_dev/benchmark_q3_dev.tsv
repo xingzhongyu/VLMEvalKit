@@ -1,0 +1,11 @@
+index	question	image_path	A	B	C	D	E	F	answer
+0	Based on this product image, what manufacturing process was used to make it?	images/0000.jpg	Design Validation	Silk Screening	Forming	Woodworking, Nailing	Fabrication	Kitting	C;E
+1	Based on this product image, what manufacturing process was used to make it?	images/0001.jpg	Forming	Plating	Stamping, Water Jet Cutting	Dyeing	Welding	Fabrication	A;E;F
+2	Based on this product image, what manufacturing process was used to make it?	images/0002.jpg	Silk Screening	Galvanizing	Forming	Fabrication	Design Validation	Kitting	D;C
+3	Based on this product image, what manufacturing process was used to make it?	images/0003.jpg	Engineering Design, Circuitry Design	Plasma Cutting	Mig Welding,	Machining	Ultrasonic Welding	Carburizing	D
+4	Based on this product image, what manufacturing process was used to make it?	images/0004.jpg	Product Design	Assembly, Wiring, Soldering	Carburizing	Pcb Manufacturing	Machining	Thermoforming	E
+5	Based on this product image, what manufacturing process was used to make it?	images/0005.jpg	Product Design	Machining	Pcb Manufacturing	Flip Chip	Thermoforming	Assembly, Wiring, Soldering	B
+6	Based on this product image, what manufacturing process was used to make it?	images/0006.jpg	Ultrasonic Welding	PCB Manufacturing	Fabrication	Machining	Kitting	Bottling	C
+7	Based on this product image, what manufacturing process was used to make it?	images/0007.jpg	Cut to length	Sewing	Anodize	Aluminum extrusion	Digital Printing	Textile Construction	C;D
+8	Based on this product image, what manufacturing process was used to make it?	images/0008.jpg	Shearing	Fabric Manufacturing	Pressing	Fabrication	Lamination	Installation	D
+9	Based on this product image, what manufacturing process was used to make it?	images/0009.jpg	Cut to length	Digital Printing	Textile Construction	Dyeing	Sewing	Aluminum extrusion	A;F

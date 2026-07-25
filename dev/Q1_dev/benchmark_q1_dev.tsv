@@ -1,0 +1,11 @@
+index	question	image_path	A	B	C	D	E	F	answer
+0	Based on this product image, what type of product is shown?	images/0000.jpg	Stamping	Machine Parts	bearings	impellers	Steel Products	Custom Truck Bodies	F
+1	Based on this product image, what type of product is shown?	images/0001.jpg	Precise Weldments	bearings	Metal Components	Steel Products	Custom Truck Bodies	Hardware	E
+2	Based on this product image, what type of product is shown?	images/0002.jpg	Custom Truck Bodies	Stamping	bearings	Machine Parts	impellers	Steel Products	A
+3	Based on this product image, what type of product is shown?	images/0003.jpg	Detention Furniture	Shafts	Ground Rods	Galvanize Products	Molds	Custom Truck Bodies	F
+4	Based on this product image, what type of product is shown?	images/0004.jpg	angle	Detention Furniture	Ground Rods	Steel Products	Custom Truck Bodies	Shafts	E
+5	Based on this product image, what type of product is shown?	images/0005.jpg	Shafts	Custom Truck Bodies	Molds	Hardware	Detention Furniture	Ground Rods	B
+6	Based on this product image, what type of product is shown?	images/0006.jpg	Component Parts	Powder Coat & Media Blast	Machinery Components	Large Water Purification Systems	Hand Tools	Cellular, Fiber Optics, Flat Cable Tooling.	A;C
+7	Based on this product image, what type of product is shown?	images/0007.jpg	Pressure Vessels	Custom Truck Bodies	Power Protection Devices	Metal Products	Detention Equipment	Fixtures	B
+8	Based on this product image, what type of product is shown?	images/0008.jpg	Turbine Components	Flow Measurement Devices	Small Automotive Parts	Surgical Tools	Stairs	Machined Parts	F
+9	Based on this product image, what type of product is shown?	images/0009.jpg	Heat Exchangers	Repairs On Factory Machinery And Construction Equipment	presses	Filters	Machined Parts	Cable Entry Seals And Shrinkable Products	E
