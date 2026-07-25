@@ -224,6 +224,7 @@ old_outputs
 flash_attn*
 Q2/*
 !Q2/convert_to_tsv.py
+!Q2/benchmark_q2.tsv
 origin_Q2
 Q5/convert_to_tsv.py
 Q4/q4_images
